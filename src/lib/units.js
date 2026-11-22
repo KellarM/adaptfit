@@ -51,3 +51,11 @@ export function lbToKg(lb) {
   if (Number.isNaN(n)) return undefined;
   return Math.round(n * KG_PER_LB * 10) / 10;
 }
+
+// Every weight is shown in pounds, so anything stored in kilograms is converted first.
+export function weightToLb(value, unit) {
+  if (isBlank(value)) return "";
+  const n = Number(value);
+  if (Number.isNaN(n)) return "";
+  return Math.round((unit === "kg" ? n / KG_PER_LB : n) * 10) / 10;
+}

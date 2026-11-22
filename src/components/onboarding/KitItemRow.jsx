@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { EQUIPMENT_CATEGORIES, labelOf } from "@/lib/options";
 import { isWeighted } from "@/lib/kit";
+import { weightToLb } from "@/lib/units";
 
 export default function KitItemRow({ item, onChange, onRemove }) {
   return (
@@ -19,19 +20,12 @@ export default function KitItemRow({ item, onChange, onRemove }) {
             <input
               type="number"
               inputMode="decimal"
-              value={item.weight_value ?? ""}
-              onChange={(e) => onChange({ weight_value: e.target.value })}
+              value={weightToLb(item.weight_value, item.weight_unit)}
+              onChange={(e) => onChange({ weight_value: e.target.value, weight_unit: "lb" })}
               placeholder="weight"
               className="tnum h-8 w-16 rounded-lg border border-input bg-background text-center text-[11.5px] outline-none focus:border-primary/60"
             />
-            <select
-              value={item.weight_unit || "lb"}
-              onChange={(e) => onChange({ weight_unit: e.target.value })}
-              className="h-8 rounded-lg border border-input bg-background px-1 text-[11px] outline-none focus:border-primary/60"
-            >
-              <option value="lb">lb</option>
-              <option value="kg">kg</option>
-            </select>
+            <span className="text-[10px] text-muted-foreground">lb</span>
           </div>
         ) : null}
 

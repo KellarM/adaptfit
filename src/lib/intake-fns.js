@@ -142,7 +142,7 @@ const KIT_SCHEMA = {
           name: { type: "string" },
           category: { type: "string", enum: KIT_CATEGORIES },
           weight_value: { type: "number" },
-          weight_unit: { type: "string", enum: ["lb", "kg"] },
+          weight_unit: { type: "string", enum: ["lb"] },
           increment: { type: "number" },
           quantity: { type: "number" },
           notes: { type: "string" },
@@ -183,9 +183,9 @@ Return JSON with exactly one field, items: one entry per distinct piece of equip
 Each item:
 - name: what it is, in the client's own words plus the size when given (for example "Adjustable dumbbells", "25 lb kettlebell", "Flat bench", "Light resistance band").
 - category: one of ${KIT_CATEGORIES.join(", ")}.
-- weight_value: the heaviest or working weight as a number. Use 0 when the item has no meaningful weight (bench, band, bike, rower, an empty bar).
-- weight_unit: "lb" or "kg", matching what the client used. Use "lb" when they give no unit.
-- increment: the smallest available jump for that item in the same unit (dumbbells 5, barbell and plates 2.5, kettlebell 5, machine 5). Use 2.5 when unsure.
+- weight_value: the heaviest or working weight as a number, always in pounds. Convert any kilogram figure to pounds (1 kg = 2.2 lb). Use 0 when the item has no meaningful weight (bench, band, bike, rower, an empty bar).
+- weight_unit: always "lb".
+- increment: the smallest available jump for that item, in pounds (dumbbells 5, barbell and plates 2.5, kettlebell 5, machine 5). Use 2.5 when unsure.
 - quantity: how many they have — 2 for a pair of dumbbells, otherwise 1.
 - notes: one short line with anything that matters, or an empty string.`;
     return context.getBase44().asServiceRole.integrations.Core.InvokeLLM({

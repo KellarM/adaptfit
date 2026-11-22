@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { dateOnly } from "@/lib/format";
+import { kgToLb } from "@/lib/units";
 
 export async function getProfile() {
   const { items } = await base44.entities.HealthProfile.filter({}, { sort: "-created_date", limit: 1 });
@@ -38,7 +39,8 @@ export function sessionVolume(session) {
       total +
       sets.reduce((sum, s) => {
         if (!s?.done) return sum;
-        return sum + Number(s.reps || 0) * Number(s.weight || ex.load_kg || 0);
+        const fallback = ex.load_lb ?? (ex.load_kg ? kgToLb(ex.load_kg) : 0);
+        return sum + Number(s.reps || 0) * Number(s.weight || fallback || 0);
       }, 0)
     );
   }, 0);

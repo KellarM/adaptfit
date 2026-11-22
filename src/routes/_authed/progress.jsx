@@ -159,7 +159,7 @@ function ProgressPage() {
                   </span>
                 </span>
                 <span className="tnum text-[11px] text-muted-foreground">
-                  {Math.round(s.volume || 0)} kg lifted
+                  {Math.round(s.volume || 0)} lb lifted
                 </span>
                 <span className="tnum w-10 text-right text-[11px] text-primary">
                   {fmtNum(s.elbow_pain ?? 0, 0)}/10

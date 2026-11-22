@@ -1,5 +1,6 @@
 import { LIBRARY } from "./exerciseLibrary";
 import { addDays, mondayOf, prettyDate, round } from "./format";
+import { KG_PER_LB, weightToLb } from "./units";
 
 const SPLITS = {
   2: [
@@ -91,23 +92,22 @@ function prescription(profile) {
 }
 
 function loadFor(exercise, equipment, factor) {
-  if (exercise.load === "body") return { label: "bodyweight", kg: 0 };
-  if (exercise.load === "band") return { label: "medium band", kg: 0 };
-  if (exercise.load === "time") return { label: "hold", kg: 0 };
+  if (exercise.load === "body") return { label: "bodyweight", lb: 0, kg: 0 };
+  if (exercise.load === "band") return { label: "medium band", lb: 0, kg: 0 };
+  if (exercise.load === "time") return { label: "hold", lb: 0, kg: 0 };
 
   const item = equipment.find(
     (e) => exercise.equipment.includes(e.category) && Number(e.weight_value) > 0
   );
-  if (!item) return { label: "light", kg: 0 };
+  if (!item) return { label: "light", lb: 0, kg: 0 };
 
   const step = Number(item.increment) || 1;
-  const value = Math.max(step, round(Number(item.weight_value) * factor, step));
-  const unit = item.weight_unit || "kg";
-  const kg = unit === "lb" ? value * 0.4536 : value;
+  const value = Math.max(step, round(weightToLb(item.weight_value, item.weight_unit) * factor, step));
 
   return {
-    label: `${value} ${unit}${exercise.load === "per_hand" ? " each" : ""}`,
-    kg: Math.round(kg * 10) / 10,
+    label: `${value} lb${exercise.load === "per_hand" ? " each" : ""}`,
+    lb: value,
+    kg: Math.round(value * KG_PER_LB * 10) / 10,
   };
 }
 
@@ -175,6 +175,7 @@ export function buildWeek({
           pattern === "cardio" ? "8 min easy" : pattern === "mobility" ? "1 min" : "hold 20–30 sec",
         rest_seconds: pattern === "core" || pattern === "mobility" ? Math.min(base.rest, 60) : base.rest,
         load: load.label,
+        load_lb: load.lb,
         load_kg: load.kg,
         swapped: (pattern === "pull" || pattern === "carry") && avoid.has("grip"),
         sets_log: [],

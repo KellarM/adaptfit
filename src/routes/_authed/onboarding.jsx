@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
 import { isoDate, mondayOf } from "@/lib/format";
 import { METRICS } from "@/lib/metrics";
-import { lbToKg, unitToCm } from "@/lib/units";
+import { lbToKg, unitToCm, weightToLb } from "@/lib/units";
 import { analyzeBasics } from "@/lib/intake-fns";
 import { factsToForm } from "@/lib/basics";
 import { buildWeek } from "@/lib/plan";
@@ -257,7 +257,8 @@ function OnboardingPage() {
 
       const kit = form.equipment.map((e) => ({
         ...e,
-        weight_value: num(e.weight_value),
+        weight_value: num(weightToLb(e.weight_value, e.weight_unit)),
+        weight_unit: "lb",
         quantity: num(e.quantity) ?? 1,
       }));
       if (kit.length) await base44.entities.Equipment.bulkCreate(kit);

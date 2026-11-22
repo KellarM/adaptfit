@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getEquipment } from "@/lib/api";
 import { fmtNum } from "@/lib/format";
+import { weightToLb } from "@/lib/units";
 import { EQUIPMENT_CATEGORIES, labelOf } from "@/lib/options";
 import EquipmentDialog from "@/components/equipment/EquipmentDialog";
 
@@ -99,7 +100,7 @@ function EquipmentPage() {
                       <span className="block truncate text-[13px]">{item.name}</span>
                       <span className="tnum block text-[10.5px] text-muted-foreground">
                         {item.weight_value
-                          ? `${fmtNum(item.weight_value)} ${item.weight_unit || "kg"}`
+                          ? `${fmtNum(weightToLb(item.weight_value, item.weight_unit))} lb`
                           : labelOf(EQUIPMENT_CATEGORIES, item.category)}
                         {item.quantity ? ` · qty ${item.quantity}` : ""}
                         {item.increment ? ` · ${fmtNum(item.increment)} jumps` : ""}

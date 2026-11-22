@@ -68,7 +68,7 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
                       onChange={(e) => onSetChange(si, { weight: e.target.value })}
                       className="tnum ml-1 h-10 w-16 rounded-lg border border-input bg-background text-center text-[13px] outline-none focus:border-primary/60"
                     />
-                    <span className="text-[10px] text-muted-foreground">kg</span>
+                    <span className="text-[10px] text-muted-foreground">lb</span>
                   </>
                 ) : null}
               </div>

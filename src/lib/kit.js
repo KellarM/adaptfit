@@ -1,4 +1,5 @@
 import { EQUIPMENT_CATEGORIES } from "@/lib/options";
+import { KG_PER_LB } from "@/lib/units";
 
 const WEIGHTED = ["dumbbell", "barbell", "plates", "kettlebell", "medicine_ball"];
 
@@ -8,11 +9,15 @@ export function isWeighted(category) {
 
 export function normalizeItem(item) {
   const known = EQUIPMENT_CATEGORIES.some((c) => c.key === item.category);
+  // Weights are kept in pounds only, whatever the reading came back in.
+  const raw = Number(item.weight_value) > 0 ? Number(item.weight_value) : "";
+  const weight =
+    raw === "" ? "" : item.weight_unit === "kg" ? Math.round((raw / KG_PER_LB) * 10) / 10 : raw;
   return {
     name: String(item.name || "").trim(),
     category: known ? item.category : "other",
-    weight_value: Number(item.weight_value) > 0 ? Number(item.weight_value) : "",
-    weight_unit: item.weight_unit === "kg" ? "kg" : "lb",
+    weight_value: weight,
+    weight_unit: "lb",
     increment: Number(item.increment) > 0 ? Number(item.increment) : 2.5,
     quantity: Number(item.quantity) > 0 ? Number(item.quantity) : 1,
     notes: item.notes || "",

@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { sessionVolume } from "@/lib/api";
 import { prettyDate } from "@/lib/format";
+import { kgToLb } from "@/lib/units";
 import ExerciseBlock from "@/components/session/ExerciseBlock";
 import RestTimer from "@/components/session/RestTimer";
 import FeedbackDialog from "@/components/session/FeedbackDialog";
@@ -20,7 +21,7 @@ function withSets(exercise) {
       ? exercise.sets_log
       : Array.from({ length: exercise.sets || 2 }, () => ({
           reps: exercise.reps ?? "",
-          weight: exercise.load_kg || "",
+          weight: exercise.load_lb ?? (exercise.load_kg ? kgToLb(exercise.load_kg) : ""),
           done: false,
         }));
   return { ...exercise, sets_log };

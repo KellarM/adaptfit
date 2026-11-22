@@ -7,19 +7,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EQUIPMENT_CATEGORIES } from "@/lib/options";
+import { weightToLb } from "@/lib/units";
 
 const BLANK = {
   name: "",
   category: "dumbbell",
   weight_value: "",
-  weight_unit: "kg",
+  weight_unit: "lb",
   increment: "2.5",
   quantity: "1",
   notes: "",
 };
 
 export default function EquipmentDialog({ initial, onOpenChange, onSave, saving }) {
-  const [form, setForm] = useState({ ...BLANK, ...(initial || {}) });
+  const [form, setForm] = useState(() => {
+    const base = { ...BLANK, ...(initial || {}) };
+    return {
+      ...base,
+      weight_value: weightToLb(base.weight_value, base.weight_unit),
+      weight_unit: "lb",
+    };
+  });
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const num = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
 
@@ -41,7 +49,7 @@ export default function EquipmentDialog({ initial, onOpenChange, onSave, saving 
             <input
               value={form.name}
               onChange={(e) => set({ name: e.target.value })}
-              placeholder="Pair of 12.5 kg dumbbells"
+              placeholder="Pair of 25 lb dumbbells"
               className="field mt-1"
             />
           </label>
@@ -63,7 +71,7 @@ export default function EquipmentDialog({ initial, onOpenChange, onSave, saving 
 
           <div className="grid grid-cols-3 gap-2.5">
             <label className="block">
-              <span className="text-[10.5px] text-muted-foreground">Weight</span>
+              <span className="text-[10.5px] text-muted-foreground">Weight (lb)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -73,18 +81,7 @@ export default function EquipmentDialog({ initial, onOpenChange, onSave, saving 
               />
             </label>
             <label className="block">
-              <span className="text-[10.5px] text-muted-foreground">Unit</span>
-              <select
-                value={form.weight_unit}
-                onChange={(e) => set({ weight_unit: e.target.value })}
-                className="field mt-1"
-              >
-                <option value="kg">kg</option>
-                <option value="lb">lb</option>
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-[10.5px] text-muted-foreground">Jump</span>
+              <span className="text-[10.5px] text-muted-foreground">Jump (lb)</span>
               <input
                 type="number"
                 inputMode="decimal"
@@ -93,18 +90,17 @@ export default function EquipmentDialog({ initial, onOpenChange, onSave, saving 
                 className="field tnum mt-1"
               />
             </label>
+            <label className="block">
+              <span className="text-[10.5px] text-muted-foreground">How many</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={form.quantity}
+                onChange={(e) => set({ quantity: e.target.value })}
+                className="field tnum mt-1"
+              />
+            </label>
           </div>
-
-          <label className="block">
-            <span className="text-[10.5px] text-muted-foreground">How many</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              value={form.quantity}
-              onChange={(e) => set({ quantity: e.target.value })}
-              className="field tnum mt-1"
-            />
-          </label>
 
           <label className="block">
             <span className="text-[10.5px] text-muted-foreground">Notes</span>
@@ -123,6 +119,7 @@ export default function EquipmentDialog({ initial, onOpenChange, onSave, saving 
               onSave({
                 ...form,
                 weight_value: num(form.weight_value),
+                weight_unit: "lb",
                 increment: num(form.increment),
                 quantity: num(form.quantity) ?? 1,
               })
