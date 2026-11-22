@@ -48,6 +48,19 @@
       "type": "string",
       "description": "Advice from doctor or physiotherapist"
     },
+    "measurement_unit": {
+      "type": "string",
+      "enum": [
+        "in",
+        "cm"
+      ],
+      "enumColors": [
+        "blue",
+        "gray"
+      ],
+      "default": "in",
+      "description": "Preferred unit for tape measurements"
+    },
     "onboarding_complete": {
       "type": "boolean",
       "default": false
@@ -75,5 +88,6 @@
     "delete": {
       "created_by_id": "{{user.id}}"
     }
-  }
+  },
+  "required": []
 }

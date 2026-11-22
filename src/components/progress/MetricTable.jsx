@@ -1,10 +1,12 @@
-import { METRICS } from "@/lib/metrics";
+import { METRICS, metricUnit } from "@/lib/metrics";
+import { cmToUnit } from "@/lib/units";
 import { fmtDelta, fmtNum } from "@/lib/format";
 
-export default function MetricTable({ baseline, latest }) {
+export default function MetricTable({ baseline, latest, unit = "cm" }) {
   const rows = METRICS.map((m) => {
-    const start = baseline?.[m.key];
-    const now = latest?.[m.key];
+    const toUnit = (value) => (m.length ? cmToUnit(value, unit) : value);
+    const start = toUnit(baseline?.[m.key]);
+    const now = toUnit(latest?.[m.key]);
     const hasStart = start !== null && start !== undefined && start !== "";
     const hasNow = now !== null && now !== undefined && now !== "";
     const delta = hasStart && hasNow ? Number(now) - Number(start) : null;
@@ -29,7 +31,12 @@ export default function MetricTable({ baseline, latest }) {
       </div>
       {rows.map((r) => (
         <div key={r.key} className="flex items-center gap-3 py-2.5">
-          <span className="flex-1 text-[12.5px]">{r.label}</span>
+          <span className="flex-1 text-[12.5px]">
+            {r.label}
+            <span className="ml-1 text-[10px] text-muted-foreground">
+              {metricUnit(r, unit)}
+            </span>
+          </span>
           <span className="tnum w-16 text-right text-[12px] text-muted-foreground">
             {r.hasStart ? fmtNum(r.start) : "—"}
           </span>

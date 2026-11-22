@@ -7,24 +7,47 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { METRICS } from "@/lib/metrics";
+import { cmToUnit, convertEntered, unitToCm } from "@/lib/units";
 import { isoDate } from "@/lib/format";
+import MetricInputs from "@/components/measurements/MetricInputs";
+import UnitToggle from "@/components/measurements/UnitToggle";
 
-export default function MeasurementDialog({ onOpenChange, onSave, saving, initial }) {
+export default function MeasurementDialog({
+  onOpenChange,
+  onSave,
+  saving,
+  initial,
+  unit = "in",
+  onUnitChange,
+}) {
   const [date, setDate] = useState(initial?.date || isoDate());
+  const [displayUnit, setDisplayUnit] = useState(unit);
   const [values, setValues] = useState(() => {
     const next = {};
     METRICS.forEach((m) => {
-      next[m.key] = initial?.[m.key] ?? "";
+      const stored = initial?.[m.key];
+      next[m.key] = m.length ? cmToUnit(stored, unit) : (stored ?? "");
     });
     return next;
   });
   const [notes, setNotes] = useState(initial?.notes || "");
 
+  const changeUnit = (next) => {
+    if (next === displayUnit) return;
+    setValues((v) => convertEntered(v, METRICS, displayUnit, next));
+    setDisplayUnit(next);
+    if (onUnitChange) onUnitChange(next);
+  };
+
   const submit = () => {
     const payload = { date, notes };
     METRICS.forEach((m) => {
       const raw = values[m.key];
-      payload[m.key] = raw === "" ? undefined : Number(raw);
+      if (m.length) {
+        payload[m.key] = unitToCm(raw, displayUnit);
+      } else {
+        payload[m.key] = raw === "" || raw === null || raw === undefined ? undefined : Number(raw);
+      }
     });
     onSave(payload);
   };
@@ -40,33 +63,27 @@ export default function MeasurementDialog({ onOpenChange, onSave, saving, initia
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <p className="eyebrow">Date</p>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="field mt-1.5"
-            />
+          <div className="flex items-end justify-between gap-3">
+            <div className="flex-1">
+              <p className="eyebrow">Date</p>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="field mt-1.5"
+              />
+            </div>
+            <div className="pb-1">
+              <p className="eyebrow mb-1.5 text-right">Units</p>
+              <UnitToggle unit={displayUnit} onChange={changeUnit} />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            {METRICS.map((m) => (
-              <label key={m.key} className="block">
-                <span className="text-[10.5px] text-muted-foreground">
-                  {m.label} <span className="opacity-60">({m.unit})</span>
-                </span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step={m.step || "0.1"}
-                  value={values[m.key]}
-                  onChange={(e) => setValues((v) => ({ ...v, [m.key]: e.target.value }))}
-                  className="field tnum mt-1"
-                />
-              </label>
-            ))}
-          </div>
+          <MetricInputs
+            values={values}
+            unit={displayUnit}
+            onChange={(key, value) => setValues((v) => ({ ...v, [key]: value }))}
+          />
 
           <div>
             <p className="eyebrow">Notes</p>

@@ -6,6 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
 import { isoDate, mondayOf } from "@/lib/format";
 import { METRICS } from "@/lib/metrics";
+import { unitToCm } from "@/lib/units";
 import { buildWeek } from "@/lib/plan";
 import StepHealth from "@/components/onboarding/StepHealth";
 import StepMeasurements from "@/components/onboarding/StepMeasurements";
@@ -43,6 +44,7 @@ function OnboardingPage() {
       notes: "",
     },
     measurement: { date: isoDate() },
+    measurement_unit: "in",
     equipment: [],
   });
 
@@ -62,6 +64,7 @@ function OnboardingPage() {
           conditions: profile.conditions || "",
           medications: profile.medications || "",
           clinician_notes: profile.clinician_notes || "",
+          measurement_unit: profile.measurement_unit || "in",
         }));
       }
     })();
@@ -114,6 +117,7 @@ function OnboardingPage() {
         conditions: form.conditions,
         medications: form.medications,
         clinician_notes: form.clinician_notes,
+        measurement_unit: form.measurement_unit,
         onboarding_complete: true,
       };
       const profile = existing?.id
@@ -136,10 +140,11 @@ function OnboardingPage() {
       let hasMeasure = false;
       METRICS.forEach((m) => {
         const raw = form.measurement[m.key];
-        if (raw !== "" && raw !== undefined && raw !== null) {
-          measurement[m.key] = Number(raw);
-          hasMeasure = true;
-        }
+        if (raw === "" || raw === undefined || raw === null) return;
+        const value = m.length ? unitToCm(raw, form.measurement_unit) : Number(raw);
+        if (value === undefined || Number.isNaN(value)) return;
+        measurement[m.key] = value;
+        hasMeasure = true;
       });
       if (hasMeasure) {
         await base44.entities.Measurement.create({
@@ -200,7 +205,12 @@ function OnboardingPage() {
       <div className="panel px-5 py-5">
         {step === 0 ? <StepHealth form={form} set={set} setInjury={setInjury} /> : null}
         {step === 1 ? (
-          <StepMeasurements value={form.measurement} onChange={setMeasurement} />
+          <StepMeasurements
+            value={form.measurement}
+            onChange={setMeasurement}
+            unit={form.measurement_unit}
+            onUnitChange={(unit) => set({ measurement_unit: unit })}
+          />
         ) : null}
         {step === 2 ? (
           <StepEquipment
