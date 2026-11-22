@@ -1,0 +1,95 @@
+{
+  "name": "Injury",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "e.g. Medial epicondylitis"
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "elbow",
+        "shoulder",
+        "wrist",
+        "lower_back",
+        "knee",
+        "hip",
+        "ankle",
+        "neck",
+        "other"
+      ],
+      "enumColors": [
+        "red",
+        "purple",
+        "yellow",
+        "blue",
+        "green",
+        "pink",
+        "gray",
+        "blue",
+        "gray"
+      ]
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "left",
+        "right",
+        "both"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "gray"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "recovering",
+        "resolved"
+      ],
+      "enumColors": [
+        "red",
+        "yellow",
+        "green"
+      ]
+    },
+    "pain_level": {
+      "type": "number",
+      "description": "0-10 at rest or with daily activity"
+    },
+    "avoid_tags": {
+      "type": "array",
+      "description": "Movement stress tags to keep out of the plan, e.g. medial_elbow, grip, wrist, overhead, lumbar, knee"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

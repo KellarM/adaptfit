@@ -1,0 +1,90 @@
+{
+  "name": "Equipment",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "dumbbell",
+        "barbell",
+        "plates",
+        "bench",
+        "band",
+        "kettlebell",
+        "cable",
+        "pull_up_bar",
+        "bike",
+        "rower",
+        "treadmill",
+        "medicine_ball",
+        "other"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "gray",
+        "yellow",
+        "green",
+        "pink",
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "gray",
+        "pink",
+        "gray"
+      ]
+    },
+    "weight_value": {
+      "type": "number",
+      "description": "Heaviest or single working weight of this item"
+    },
+    "weight_unit": {
+      "type": "string",
+      "enum": [
+        "kg",
+        "lb"
+      ],
+      "enumColors": [
+        "blue",
+        "gray"
+      ]
+    },
+    "increment": {
+      "type": "number",
+      "description": "Smallest jump available, e.g. 2.5"
+    },
+    "quantity": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

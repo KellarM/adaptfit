@@ -1,0 +1,79 @@
+{
+  "name": "Measurement",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_baseline": {
+      "type": "boolean",
+      "default": false
+    },
+    "weight_kg": {
+      "type": "number"
+    },
+    "neck_cm": {
+      "type": "number"
+    },
+    "chest_cm": {
+      "type": "number"
+    },
+    "waist_cm": {
+      "type": "number"
+    },
+    "hips_cm": {
+      "type": "number"
+    },
+    "biceps_left_cm": {
+      "type": "number"
+    },
+    "biceps_right_cm": {
+      "type": "number"
+    },
+    "forearm_left_cm": {
+      "type": "number"
+    },
+    "forearm_right_cm": {
+      "type": "number"
+    },
+    "thigh_left_cm": {
+      "type": "number"
+    },
+    "thigh_right_cm": {
+      "type": "number"
+    },
+    "calf_left_cm": {
+      "type": "number"
+    },
+    "calf_right_cm": {
+      "type": "number"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

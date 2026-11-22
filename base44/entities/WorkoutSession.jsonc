@@ -1,0 +1,96 @@
+{
+  "name": "WorkoutSession",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "week_start": {
+      "type": "string",
+      "format": "date"
+    },
+    "day_index": {
+      "type": "number"
+    },
+    "title": {
+      "type": "string"
+    },
+    "focus": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "completed",
+        "skipped"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "red"
+      ]
+    },
+    "planned_minutes": {
+      "type": "number"
+    },
+    "load_factor": {
+      "type": "number"
+    },
+    "adjustment_note": {
+      "type": "string",
+      "description": "Why this week's load changed"
+    },
+    "exercises": {
+      "type": "array",
+      "description": "Each item: name, pattern, cue, muscle, sets, reps, rest_seconds, load, load_kg, swapped, sets_log[]"
+    },
+    "energy": {
+      "type": "number",
+      "description": "1-5"
+    },
+    "elbow_pain": {
+      "type": "number",
+      "description": "0-10 during or after the session"
+    },
+    "body_feel": {
+      "type": "number",
+      "description": "1-5 overall"
+    },
+    "feedback_notes": {
+      "type": "string"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "volume": {
+      "type": "number",
+      "description": "Total reps x weight in kg"
+    }
+  },
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

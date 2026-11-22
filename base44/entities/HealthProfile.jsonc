@@ -1,0 +1,79 @@
+{
+  "name": "HealthProfile",
+  "type": "object",
+  "properties": {
+    "display_name": {
+      "type": "string",
+      "description": "First name used for greetings"
+    },
+    "age": {
+      "type": "number"
+    },
+    "height_cm": {
+      "type": "number"
+    },
+    "experience": {
+      "type": "string",
+      "enum": [
+        "starting",
+        "returning",
+        "intermediate"
+      ],
+      "enumColors": [
+        "gray",
+        "yellow",
+        "green"
+      ],
+      "description": "Strength training experience"
+    },
+    "goals": {
+      "type": "array",
+      "description": "Goal keys: strength, muscle, mobility, fat_loss, conditioning, pain_free"
+    },
+    "weekly_target": {
+      "type": "number",
+      "description": "Sessions per week"
+    },
+    "session_minutes": {
+      "type": "number"
+    },
+    "conditions": {
+      "type": "string",
+      "description": "Current health factors"
+    },
+    "medications": {
+      "type": "string"
+    },
+    "clinician_notes": {
+      "type": "string",
+      "description": "Advice from doctor or physiotherapist"
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
