@@ -204,8 +204,8 @@ function OnboardingPage() {
           Your body first. The plan comes after.
         </h1>
         <p className="text-[13px] leading-relaxed text-muted-foreground">
-          Nothing gets prescribed until I know what I&rsquo;m working with: your baseline numbers,
-          every muscle you want to track, and your own words about what your body is dealing with.
+          Four sections, one pass: your baseline numbers, every muscle you want to track, and your
+          own words about what your body is dealing with. The plan only starts once all of it is in.
         </p>
       </header>
 
