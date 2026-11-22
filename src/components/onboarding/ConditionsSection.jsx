@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { analyzeConditions } from "@/lib/intake-fns";
 import AnalysisCard from "@/components/onboarding/AnalysisCard";
+import TextToggle from "@/components/onboarding/TextToggle";
 
 export default function ConditionsSection({
   text,
@@ -14,6 +15,7 @@ export default function ConditionsSection({
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState("");
+  const [showText, setShowText] = useState(!analysis);
 
   const analyse = async () => {
     if (!text.trim()) return;
@@ -22,6 +24,7 @@ export default function ConditionsSection({
     try {
       const result = await analyzeConditions({ data: { text: text.trim() } });
       onAnalysis(result);
+      setShowText(false);
     } catch {
       setError("I couldn't read that just now. Try again in a moment.");
     } finally {
@@ -43,6 +46,7 @@ export default function ConditionsSection({
       const result = await analyzeConditions({ data: { text: combined } });
       onText(combined);
       onAnalysis(result);
+      setShowText(false);
       if (onClearAnswers) onClearAnswers();
     } catch {
       setError("I couldn't update that just now. Try again in a moment.");
@@ -53,32 +57,6 @@ export default function ConditionsSection({
 
   return (
     <div className="space-y-3">
-      <textarea
-        value={text}
-        onChange={(e) => onText(e.target.value)}
-        rows={6}
-        placeholder="Write it the way you'd tell a friend. What hurts, when it started, what makes it worse, anything your doctor or physio said…"
-        className="field h-auto resize-none py-3 leading-relaxed"
-      />
-
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={analyse}
-          disabled={busy || !text.trim()}
-          className="rounded-full border border-primary/60 bg-primary/15 px-4 py-2.5 text-[12px] text-primary transition hover:bg-primary/25 disabled:opacity-50"
-        >
-          {busy ? "Reading your description…" : analysis ? "Read it again" : "Read my description"}
-        </button>
-        <p className="text-[10.5px] leading-relaxed text-muted-foreground">
-          {analysis
-            ? "Saved with your setup. Correct anything below and read it again."
-            : "I'll break it into areas, what to avoid, and anything I still need to ask."}
-        </p>
-      </div>
-
-      {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
-
       {analysis ? (
         <AnalysisCard
           analysis={analysis}
@@ -86,6 +64,48 @@ export default function ConditionsSection({
           onAnswer={onAnswer}
           onApply={applyAnswers}
           applying={applying}
+        />
+      ) : null}
+
+      {showText ? (
+        <div className="space-y-3">
+          <textarea
+            value={text}
+            onChange={(e) => onText(e.target.value)}
+            rows={6}
+            placeholder="Write it the way you'd tell a friend. What hurts, when it started, what makes it worse, anything your doctor or physio said…"
+            className="field h-auto resize-none py-3 leading-relaxed"
+          />
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={analyse}
+              disabled={busy || !text.trim()}
+              className="rounded-full border border-primary/60 bg-primary/15 px-4 py-2.5 text-[12px] text-primary transition hover:bg-primary/25 disabled:opacity-50"
+            >
+              {busy
+                ? "Reading your description…"
+                : analysis
+                  ? "Read it again"
+                  : "Read my description"}
+            </button>
+            <p className="text-[10.5px] leading-relaxed text-muted-foreground">
+              {analysis
+                ? "Saved with your setup. Correct anything here and read it again."
+                : "I'll break it into areas, what to avoid, and anything I still need to ask."}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
+
+      {analysis ? (
+        <TextToggle
+          open={showText}
+          onToggle={() => setShowText((open) => !open)}
+          label="what I wrote"
         />
       ) : null}
     </div>
