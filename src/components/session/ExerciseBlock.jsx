@@ -30,7 +30,7 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
           {exercise.cue}
         </p>
 
-        <ExerciseDemo src={demoFor(exercise.pattern)} name={exercise.name} />
+        <ExerciseDemo src={demoFor(exercise)} name={exercise.name} />
 
         {exercise.swapped ? (
           <p className="mt-2 text-[10.5px] text-primary">

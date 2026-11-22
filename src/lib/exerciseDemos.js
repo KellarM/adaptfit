@@ -1,3 +1,5 @@
+import { LIBRARY } from "./exerciseLibrary";
+
 // One short looping clip per movement pattern, shown on the session screen.
 // Keyed by the exercise's pattern so every movement in the plan has a demo.
 // Each clip shows one complete repetition, from the start position through the
@@ -13,6 +15,13 @@ export const DEMO_CLIPS = {
   cardio: "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/5480c4934_Cardio_demo.mp4",
 };
 
-export function demoFor(pattern) {
-  return DEMO_CLIPS[pattern] || null;
+// Movements that look nothing like the rest of their pattern get their own clip.
+export const EXERCISE_CLIPS = {
+  plank: "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/a16728a92_Plank_demo.mp4",
+};
+
+export function demoFor(exercise) {
+  // Planned sessions store the movement by name, so fall back to the library id.
+  const id = exercise?.id || LIBRARY.find((item) => item.name === exercise?.name)?.id;
+  return EXERCISE_CLIPS[id] || DEMO_CLIPS[exercise?.pattern] || null;
 }
