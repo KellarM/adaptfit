@@ -34,6 +34,8 @@ function SessionPage() {
   const [rest, setRest] = useState(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Typing in a set field shouldn't fire a save per keystroke.
+  const saveTimer = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -52,8 +54,6 @@ function SessionPage() {
     return <p className="py-24 text-center text-[13px] text-muted-foreground">Loading session…</p>;
   }
 
-  // Typing in a set field shouldn't fire a save per keystroke.
-  const saveTimer = useRef(null);
   const persist = (next) => {
     setExercises(next);
     if (saveTimer.current) clearTimeout(saveTimer.current);
