@@ -1,4 +1,6 @@
 import { Check } from "lucide-react";
+import { demoFor } from "@/lib/exerciseDemos";
+import ExerciseDemo from "@/components/session/ExerciseDemo";
 
 export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone }) {
   const timed = !exercise.reps;
@@ -27,6 +29,8 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
         <p className="mt-2.5 rounded-xl bg-background/70 px-3 py-2 text-[11.5px] leading-relaxed text-muted-foreground">
           {exercise.cue}
         </p>
+
+        <ExerciseDemo src={demoFor(exercise.pattern)} name={exercise.name} />
 
         {exercise.swapped ? (
           <p className="mt-2 text-[10.5px] text-primary">
