@@ -13,6 +13,8 @@ const HEIGHT = {
   length: true,
 };
 
+const GENERAL = { id: "general", label: "Weight & height", keys: ["weight_kg"] };
+
 export default function BodyMeasurements({
   value,
   onChange,
@@ -44,18 +46,20 @@ export default function BodyMeasurements({
     if (onUnitChange) onUnitChange(next);
   };
 
-  const activeKeys = BODY_SITES.find((site) => site.id === active)?.keys || [];
+  const site = [...BODY_SITES, GENERAL].find((s) => s.id === active) || null;
+  const rows = site ? METRICS.filter((m) => site.keys.includes(m.key)) : [];
+  const select = (next) => setActive((current) => (current === next.id ? null : next.id));
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[minmax(0,225px)_minmax(0,1fr)]">
+    <div className="grid gap-4 sm:grid-cols-[minmax(0,360px)_minmax(0,1fr)] sm:gap-6">
       <div className="space-y-2">
-        <BodyDiagram active={active} onSelect={(site) => setActive(site.id)} />
+        <BodyDiagram active={active} onSelect={select} />
         <p className="text-[10px] leading-relaxed text-muted-foreground">
-          Every muscle that grows or shrinks has a tape site. Tap a name on the body to jump to it.
+          Pick a body part and only its fields open. Tap it again to hide them.
         </p>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         <div className="flex items-end justify-between gap-3">
           <label className="flex-1">
             <span className="text-[10.5px] text-muted-foreground">Date</span>
@@ -72,27 +76,57 @@ export default function BodyMeasurements({
           </div>
         </div>
 
-        <MeasurementRow
-          metric={HEIGHT}
-          value={heightText}
-          unit={unit}
-          highlight={false}
-          onChange={(text) => {
-            setHeightText(text);
-            onHeight(unitToCm(text, unit));
-          }}
-        />
+        {site ? (
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="eyebrow text-primary">{site.label}</p>
+              <button
+                type="button"
+                onClick={() => setActive(null)}
+                className="text-[10.5px] text-muted-foreground transition hover:text-foreground"
+              >
+                Hide
+              </button>
+            </div>
 
-        {METRICS.map((m) => (
-          <MeasurementRow
-            key={m.key}
-            metric={m}
-            value={m.length ? value[m.key] ?? "" : kgToLb(value[m.key])}
-            unit={unit}
-            highlight={activeKeys.includes(m.key)}
-            onChange={(next) => set({ [m.key]: m.length ? next : lbToKg(next) })}
-          />
-        ))}
+            {site.id === "general" ? (
+              <MeasurementRow
+                metric={HEIGHT}
+                value={heightText}
+                unit={unit}
+                highlight
+                onChange={(text) => {
+                  setHeightText(text);
+                  onHeight(unitToCm(text, unit));
+                }}
+              />
+            ) : null}
+
+            {rows.map((m) => (
+              <MeasurementRow
+                key={m.key}
+                metric={m}
+                value={m.length ? value[m.key] ?? "" : kgToLb(value[m.key])}
+                unit={unit}
+                highlight
+                onChange={(next) => set({ [m.key]: m.length ? next : lbToKg(next) })}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center">
+            <p className="text-[12px] leading-relaxed text-muted-foreground">
+              Tap a body part on the figure and its fields open here — one set at a time.
+            </p>
+            <button
+              type="button"
+              onClick={() => setActive(GENERAL.id)}
+              className="chip mt-3 transition hover:text-foreground"
+            >
+              Weight &amp; height
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
