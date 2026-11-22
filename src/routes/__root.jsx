@@ -17,7 +17,7 @@ export const Route = createRootRoute({
         name: "description",
         content: "A calm, elbow-aware strength programme that adapts to how your body responds.",
       },
-      { name: "theme-color", content: "#F7F4EF" },
+      { name: "theme-color", content: "#18181B" },
     ],
     // No icon link: the platform adds the app's logo when serving.
     links: [

@@ -1,0 +1,15 @@
+export const METRICS = [
+  { key: "weight_kg", label: "Body weight", unit: "kg", step: "0.1" },
+  { key: "neck_cm", label: "Neck", unit: "cm" },
+  { key: "chest_cm", label: "Chest", unit: "cm" },
+  { key: "waist_cm", label: "Waist", unit: "cm" },
+  { key: "hips_cm", label: "Hips", unit: "cm" },
+  { key: "biceps_left_cm", label: "Left biceps", unit: "cm" },
+  { key: "biceps_right_cm", label: "Right biceps", unit: "cm" },
+  { key: "forearm_left_cm", label: "Left forearm", unit: "cm" },
+  { key: "forearm_right_cm", label: "Right forearm", unit: "cm" },
+  { key: "thigh_left_cm", label: "Left thigh", unit: "cm" },
+  { key: "thigh_right_cm", label: "Right thigh", unit: "cm" },
+  { key: "calf_left_cm", label: "Left calf", unit: "cm" },
+  { key: "calf_right_cm", label: "Right calf", unit: "cm" },
+];
