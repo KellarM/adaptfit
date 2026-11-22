@@ -100,22 +100,45 @@ export const METRICS = [
 ];
 
 // Tape sites drawn on the body diagram, as percentages of the picture.
+// side: which column the site's label sits in, so the body itself stays clear.
 export const BODY_SITES = [
-  { id: "neck", label: "Neck", x: 50, y: 14, keys: ["neck_cm"] },
-  { id: "shoulders", label: "Shoulders", x: 50, y: 22, keys: ["shoulders_cm"] },
-  { id: "chest", label: "Chest", x: 50, y: 29, keys: ["chest_cm"] },
-  { id: "waist", label: "Waist", x: 50, y: 37, keys: ["waist_cm"] },
-  { id: "hips", label: "Hips", x: 50, y: 43, keys: ["hips_cm"] },
-  { id: "biceps", label: "Biceps", x: 24, y: 28, keys: ["biceps_left_cm", "biceps_right_cm"] },
+  { id: "neck", label: "Neck", x: 50, y: 14, side: "right", keys: ["neck_cm"] },
+  { id: "shoulders", label: "Shoulders", x: 50, y: 22, side: "right", keys: ["shoulders_cm"] },
+  { id: "chest", label: "Chest", x: 50, y: 29, side: "right", keys: ["chest_cm"] },
+  { id: "waist", label: "Waist", x: 50, y: 37, side: "right", keys: ["waist_cm"] },
+  { id: "hips", label: "Hips", x: 50, y: 43, side: "right", keys: ["hips_cm"] },
+  {
+    id: "biceps",
+    label: "Biceps",
+    x: 24,
+    y: 28,
+    side: "left",
+    keys: ["biceps_left_cm", "biceps_right_cm"],
+  },
   {
     id: "forearms",
     label: "Forearms",
     x: 20,
     y: 38,
+    side: "left",
     keys: ["forearm_left_cm", "forearm_right_cm"],
   },
-  { id: "thighs", label: "Thighs", x: 40, y: 58, keys: ["thigh_left_cm", "thigh_right_cm"] },
-  { id: "calves", label: "Calves", x: 41, y: 79, keys: ["calf_left_cm", "calf_right_cm"] },
+  {
+    id: "thighs",
+    label: "Thighs",
+    x: 40,
+    y: 58,
+    side: "left",
+    keys: ["thigh_left_cm", "thigh_right_cm"],
+  },
+  {
+    id: "calves",
+    label: "Calves",
+    x: 41,
+    y: 79,
+    side: "left",
+    keys: ["calf_left_cm", "calf_right_cm"],
+  },
 ];
 
 // Body weight keeps its own unit; every tape measure follows the chosen one.

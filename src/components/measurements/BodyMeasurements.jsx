@@ -51,7 +51,7 @@ export default function BodyMeasurements({
   const select = (next) => setActive((current) => (current === next.id ? null : next.id));
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[minmax(0,360px)_minmax(0,1fr)] sm:gap-6">
+    <div className="grid gap-4 sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] sm:gap-6">
       <div className="space-y-2">
         <BodyDiagram active={active} onSelect={select} values={value} unit={unit} />
         <p className="text-[10px] leading-relaxed text-muted-foreground">
