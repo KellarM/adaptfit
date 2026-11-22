@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -52,9 +52,14 @@ function SessionPage() {
     return <p className="py-24 text-center text-[13px] text-muted-foreground">Loading session…</p>;
   }
 
-  const persist = async (next) => {
+  // Typing in a set field shouldn't fire a save per keystroke.
+  const saveTimer = useRef(null);
+  const persist = (next) => {
     setExercises(next);
-    await base44.entities.WorkoutSession.update(sessionId, { exercises: next });
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      base44.entities.WorkoutSession.update(sessionId, { exercises: next });
+    }, 700);
   };
 
   const changeSet = (exIdx, setIdx, patch) => {
@@ -90,6 +95,7 @@ function SessionPage() {
 
   const finish = async (feedback) => {
     setSaving(true);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
     try {
       await base44.entities.WorkoutSession.update(sessionId, {
         ...feedback,
@@ -138,6 +144,11 @@ function SessionPage() {
           {session.adjustment_note}
         </p>
       ) : null}
+
+      <p className="rounded-2xl bg-secondary px-4 py-3 text-[11.5px] leading-relaxed text-muted-foreground">
+        Work down the list. Tap the tick when a set is done and the rest timer starts itself. The
+        weight shown is only a starting point — adjust it if the last rep felt easy or wobbly.
+      </p>
 
       <div className="space-y-3">
         {exercises.map((exercise, i) => (

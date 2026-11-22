@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authed/onboarding")({
 
 const STEPS = ["Health", "Baseline", "Kit"];
 
-export default function OnboardingPage() {
+function OnboardingPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);

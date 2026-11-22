@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { dateOnly } from "@/lib/format";
 
 export async function getProfile() {
   const { items } = await base44.entities.HealthProfile.filter({}, { sort: "-created_date", limit: 1 });
@@ -17,12 +18,16 @@ export async function getEquipment() {
 
 export async function getMeasurements() {
   const { items } = await base44.entities.Measurement.filter({}, { sort: "-date", limit: 200 });
-  return items;
+  return items.map((m) => ({ ...m, date: dateOnly(m.date) }));
 }
 
 export async function getSessions(query = {}) {
   const { items } = await base44.entities.WorkoutSession.filter(query, { sort: "date", limit: 200 });
-  return items;
+  return items.map((s) => ({
+    ...s,
+    date: dateOnly(s.date),
+    week_start: dateOnly(s.week_start),
+  }));
 }
 
 export function sessionVolume(session) {

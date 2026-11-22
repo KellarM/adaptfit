@@ -157,6 +157,7 @@ function TodayPage() {
             note: ex.muscle,
             swapped: ex.swapped,
           }))}
+          actionLabel={session.status === "completed" ? "Review session" : "Start session"}
           onStart={() => navigate({ to: "/session/$sessionId", params: { sessionId: session.id } })}
         />
       ) : (

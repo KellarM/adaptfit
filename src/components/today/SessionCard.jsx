@@ -1,6 +1,6 @@
 import { ArrowRight, Repeat2 } from "lucide-react";
 
-export default function SessionCard({ title, subtitle, exercises, onStart }) {
+export default function SessionCard({ title, subtitle, exercises, onStart, actionLabel = "Start session" }) {
   return (
     <section className="panel overflow-hidden">
       <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
@@ -49,7 +49,7 @@ export default function SessionCard({ title, subtitle, exercises, onStart }) {
           onClick={onStart}
           className="group flex w-full items-center justify-between rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90"
         >
-          Start session
+          {actionLabel}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>

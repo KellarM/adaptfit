@@ -43,7 +43,7 @@ export const LIBRARY = [
   { id: "band-pulldown", name: "Band lat pulldown", pattern: "pull", equipment: ["band"], tags: ["grip", "overhead"], level: 1, load: "band", muscle: "Back, biceps", cue: "Anchor the band high. Pull the handles down toward your chest, elbows driving toward your ribs." },
   { id: "face-pull", name: "Band face pull", pattern: "pull", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Upper back, shoulders", cue: "Pull the band toward your forehead with elbows high, finishing with your hands beside your ears." },
   { id: "db-curl", name: "Dumbbell curl", pattern: "pull", equipment: ["dumbbell"], tags: ["medial_elbow", "grip"], level: 2, load: "per_hand", muscle: "Biceps", cue: "Elbows pinned to your sides. Curl up without swinging, lower all the way down." },
-  { id: "band-external-rotation", name: "Band external rotation", pattern: "pull", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Rotator cuff", cue: "Elbow bent 90° at your side. Rotate your forearm outward slowly, then return." },
+  { id: "band-external-rotation", name: "Band external rotation", pattern: "mobility", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Rotator cuff", cue: "Elbow bent 90° at your side. Rotate your forearm outward slowly, then return." },
 
   // ---- squat
   { id: "goblet-squat", name: "Goblet squat", pattern: "squat", equipment: ["dumbbell", "kettlebell"], tags: [], level: 1, load: "total", muscle: "Legs, hips, trunk", cue: "Hold one weight at your chest. Sit down between your knees, then stand up tall." },

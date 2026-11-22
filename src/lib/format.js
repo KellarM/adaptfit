@@ -7,8 +7,13 @@ export function isoDate(value = new Date()) {
   ).padStart(2, "0")}`;
 }
 
+// Stored dates can come back as a plain day or a full timestamp — keep the day only.
+export function dateOnly(value) {
+  return value ? String(value).slice(0, 10) : value;
+}
+
 export function fromIso(iso) {
-  return new Date(`${iso}T00:00:00`);
+  return new Date(`${dateOnly(iso)}T00:00:00`);
 }
 
 export function addDays(iso, days) {
