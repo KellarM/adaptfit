@@ -16,6 +16,10 @@
     "neck_cm": {
       "type": "number"
     },
+    "shoulders_cm": {
+      "type": "number",
+      "description": "Widest point across both shoulders"
+    },
     "chest_cm": {
       "type": "number"
     },
@@ -75,5 +79,6 @@
     "delete": {
       "created_by_id": "{{user.id}}"
     }
-  }
+  },
+  "required": []
 }

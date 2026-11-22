@@ -41,6 +41,14 @@
       "type": "string",
       "description": "Current health factors"
     },
+    "conditions_text": {
+      "type": "string",
+      "description": "The person's own description of their conditions and injuries"
+    },
+    "conditions_summary": {
+      "type": "string",
+      "description": "Plain-language summary of what was understood from the description"
+    },
     "medications": {
       "type": "string"
     },

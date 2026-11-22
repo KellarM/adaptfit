@@ -1,15 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
 import { isoDate, mondayOf } from "@/lib/format";
 import { METRICS } from "@/lib/metrics";
 import { unitToCm } from "@/lib/units";
 import { buildWeek } from "@/lib/plan";
-import StepHealth from "@/components/onboarding/StepHealth";
-import StepMeasurements from "@/components/onboarding/StepMeasurements";
+import AboutYou from "@/components/onboarding/AboutYou";
+import BodyMeasurements from "@/components/measurements/BodyMeasurements";
+import ConditionsSection from "@/components/onboarding/ConditionsSection";
 import StepEquipment from "@/components/onboarding/StepEquipment";
 
 export const Route = createFileRoute("/_authed/onboarding")({
@@ -17,12 +17,35 @@ export const Route = createFileRoute("/_authed/onboarding")({
   component: OnboardingPage,
 });
 
-const STEPS = ["Health", "Baseline", "Kit"];
+// Used until a described condition is read, so the elbow stays protected.
+const DEFAULT_INJURY = {
+  name: "Medial epicondylitis",
+  area: "elbow",
+  side: "right",
+  status: "recovering",
+  pain_level: 4,
+  avoid_tags: ["medial_elbow", "grip"],
+  note: "",
+};
+
+const EQUIPMENT_NAME = {
+  dumbbell: "Dumbbells",
+  band: "Resistance band",
+  bench: "Bench",
+  kettlebell: "Kettlebell",
+  barbell: "Barbell",
+  pull_up_bar: "Pull-up bar",
+  bike: "Stationary bike",
+  treadmill: "Treadmill",
+  rower: "Rowing machine",
+  medicine_ball: "Medicine ball",
+};
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [answers, setAnswers] = useState({});
   const [form, setForm] = useState({
     display_name: "",
     age: "",
@@ -31,18 +54,7 @@ function OnboardingPage() {
     goals: ["strength", "pain_free"],
     weekly_target: 3,
     session_minutes: 35,
-    conditions: "",
-    medications: "",
-    clinician_notes: "",
-    injury: {
-      name: "Medial epicondylitis",
-      area: "elbow",
-      side: "right",
-      status: "recovering",
-      pain_level: 4,
-      avoid_tags: ["medial_elbow", "grip"],
-      notes: "",
-    },
+    conditions_text: "",
     measurement: { date: isoDate() },
     measurement_unit: "in",
     equipment: [],
@@ -51,28 +63,25 @@ function OnboardingPage() {
   useEffect(() => {
     (async () => {
       const profile = await getProfile();
-      if (profile?.onboarding_complete) {
-        setForm((f) => ({
-          ...f,
-          display_name: profile.display_name || "",
-          age: profile.age ?? "",
-          height_cm: profile.height_cm ?? "",
-          experience: profile.experience || "starting",
-          goals: profile.goals || f.goals,
-          weekly_target: profile.weekly_target ?? 3,
-          session_minutes: profile.session_minutes ?? 35,
-          conditions: profile.conditions || "",
-          medications: profile.medications || "",
-          clinician_notes: profile.clinician_notes || "",
-          measurement_unit: profile.measurement_unit || "in",
-        }));
-      }
+      if (!profile) return;
+      setForm((f) => ({
+        ...f,
+        display_name: profile.display_name || "",
+        age: profile.age ?? "",
+        height_cm: profile.height_cm ?? "",
+        experience: profile.experience || "starting",
+        goals: profile.goals?.length ? profile.goals : f.goals,
+        weekly_target: profile.weekly_target ?? 3,
+        session_minutes: profile.session_minutes ?? 35,
+        conditions_text: profile.conditions_text || "",
+        measurement_unit: profile.measurement_unit || "in",
+      }));
     })();
   }, []);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
-  const setInjury = (value) => set({ injury: value });
   const setMeasurement = (value) => set({ measurement: value });
+  const setAnswer = (question, value) => setAnswers((a) => ({ ...a, [question]: value }));
 
   const toggleEquipment = (preset) => {
     const exists = form.equipment.find((e) => e.category === preset.category);
@@ -105,6 +114,10 @@ function OnboardingPage() {
     try {
       const num = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
 
+      const answerLines = Object.entries(answers)
+        .filter(([, value]) => value && value.trim())
+        .map(([question, value]) => `${question} ${value.trim()}`);
+
       const existing = await getProfile();
       const profilePayload = {
         display_name: form.display_name,
@@ -114,9 +127,8 @@ function OnboardingPage() {
         goals: form.goals,
         weekly_target: num(form.weekly_target) ?? 3,
         session_minutes: num(form.session_minutes) ?? 35,
-        conditions: form.conditions,
-        medications: form.medications,
-        clinician_notes: form.clinician_notes,
+        conditions_text: [form.conditions_text.trim(), ...answerLines].filter(Boolean).join("\n"),
+        conditions_summary: analysis?.summary || existing?.conditions_summary || "",
         measurement_unit: form.measurement_unit,
         onboarding_complete: true,
       };
@@ -124,16 +136,21 @@ function OnboardingPage() {
         ? await base44.entities.HealthProfile.update(existing.id, profilePayload)
         : await base44.entities.HealthProfile.create(profilePayload);
 
-      if (form.injury?.name) {
-        const injuryPayload = { ...form.injury, pain_level: num(form.injury.pain_level) ?? 0 };
-        if (existing?.id) {
-          const current = await getInjuries();
-          const match = current.find((i) => i.name === form.injury.name && i.area === form.injury.area);
-          if (match) await base44.entities.Injury.update(match.id, injuryPayload);
-          else await base44.entities.Injury.create(injuryPayload);
-        } else {
-          await base44.entities.Injury.create(injuryPayload);
-        }
+      const areas = analysis?.areas?.length ? analysis.areas : [DEFAULT_INJURY];
+      const current = existing?.id ? await getInjuries() : [];
+      for (const area of areas) {
+        const payload = {
+          name: area.name,
+          area: area.area,
+          side: area.side || "both",
+          status: area.status || "recovering",
+          pain_level: num(area.pain_level) ?? 0,
+          avoid_tags: area.avoid_tags || [],
+          notes: area.note || "",
+        };
+        const match = current.find((i) => i.name === payload.name && i.area === payload.area);
+        if (match) await base44.entities.Injury.update(match.id, payload);
+        else await base44.entities.Injury.create(payload);
       }
 
       const measurement = {};
@@ -180,79 +197,86 @@ function OnboardingPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[560px] space-y-6 py-2">
+    <div className="mx-auto max-w-[820px] space-y-5 py-2">
       <header className="space-y-3">
-        <p className="eyebrow">
-          Step {step + 1} of 3 · {STEPS[step]}
-        </p>
+        <p className="eyebrow">Set up · everything before the first exercise</p>
         <h1 className="font-display text-[1.9rem] leading-[1.1] tracking-[-0.02em] sm:text-[2.4rem]">
-          {step === 0
-            ? "Let’s start with where you are."
-            : step === 1
-              ? "Your before picture."
-              : "What you train with."}
+          Your body first. The plan comes after.
         </h1>
-        <div className="flex gap-1.5">
-          {STEPS.map((s, i) => (
-            <span
-              key={s}
-              className={`h-1 flex-1 rounded-full ${i <= step ? "bg-primary" : "bg-secondary"}`}
-            />
-          ))}
-        </div>
+        <p className="text-[13px] leading-relaxed text-muted-foreground">
+          Nothing gets prescribed until I know what I&rsquo;m working with: your baseline numbers,
+          every muscle you want to track, and your own words about what your body is dealing with.
+        </p>
       </header>
 
-      <div className="panel px-5 py-5">
-        {step === 0 ? <StepHealth form={form} set={set} setInjury={setInjury} /> : null}
-        {step === 1 ? (
-          <StepMeasurements
-            value={form.measurement}
-            onChange={setMeasurement}
-            unit={form.measurement_unit}
-            onUnitChange={(unit) => set({ measurement_unit: unit })}
-          />
-        ) : null}
-        {step === 2 ? (
-          <StepEquipment
-            equipment={form.equipment}
-            onToggle={toggleEquipment}
-            onWeight={setWeight}
-          />
-        ) : null}
-      </div>
+      <section className="panel px-5 py-5">
+        <div className="mb-4 space-y-1">
+          <p className="eyebrow">01 · About you</p>
+          <h2 className="font-display text-[1.2rem]">The basics</h2>
+        </div>
+        <AboutYou form={form} set={set} />
+      </section>
 
-      <div className="flex gap-2">
-        {step > 0 ? (
-          <button
-            type="button"
-            onClick={() => setStep((s) => s - 1)}
-            className="flex items-center gap-1.5 rounded-full border border-border px-5 py-3.5 text-[13px] text-muted-foreground transition hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-        ) : null}
+      <section className="panel px-5 py-5">
+        <div className="mb-4 space-y-1">
+          <p className="eyebrow">02 · Your body</p>
+          <h2 className="font-display text-[1.2rem]">Every muscle you&rsquo;re tracking</h2>
+          <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+            Each site is named on the body. Measure the widest point, tape snug and level, and leave
+            anything you can&rsquo;t reach empty.
+          </p>
+        </div>
+        <BodyMeasurements
+          value={form.measurement}
+          onChange={setMeasurement}
+          heightCm={form.height_cm}
+          onHeight={(height_cm) => set({ height_cm })}
+          unit={form.measurement_unit}
+          onUnitChange={(unit) => set({ measurement_unit: unit })}
+        />
+      </section>
 
-        {step < 2 ? (
-          <button
-            type="button"
-            onClick={() => setStep((s) => s + 1)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90"
-          >
-            Continue
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={finish}
-            disabled={saving}
-            className="flex-1 rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
-          >
-            {saving ? "Building your week…" : "Build my first week"}
-          </button>
-        )}
-      </div>
+      <section className="panel px-5 py-5">
+        <div className="mb-4 space-y-1">
+          <p className="eyebrow">03 · Conditions</p>
+          <h2 className="font-display text-[1.2rem]">Tell me in your own words</h2>
+          <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+            No boxes to tick. Describe it however it comes out and I&rsquo;ll break it down myself.
+          </p>
+        </div>
+        <ConditionsSection
+          text={form.conditions_text}
+          onText={(conditions_text) => set({ conditions_text })}
+          analysis={analysis}
+          onAnalysis={setAnalysis}
+          answers={answers}
+          onAnswer={setAnswer}
+        />
+      </section>
+
+      <section className="panel px-5 py-5">
+        <div className="mb-4 space-y-1">
+          <p className="eyebrow">04 · Your kit</p>
+          <h2 className="font-display text-[1.2rem]">What you train with</h2>
+          <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+            Last piece of data. The routine is built from this and nothing else.
+          </p>
+        </div>
+        <StepEquipment
+          equipment={form.equipment}
+          onToggle={toggleEquipment}
+          onWeight={setWeight}
+        />
+      </section>
+
+      <button
+        type="button"
+        onClick={finish}
+        disabled={saving}
+        className="w-full rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
+      >
+        {saving ? "Building your week…" : "Build my first week"}
+      </button>
 
       <p className="pb-2 text-center text-[10.5px] leading-relaxed text-muted-foreground">
         This app supports, and never replaces, advice from your doctor or physiotherapist.
@@ -260,16 +284,3 @@ function OnboardingPage() {
     </div>
   );
 }
-
-const EQUIPMENT_NAME = {
-  dumbbell: "Dumbbells",
-  band: "Resistance band",
-  bench: "Bench",
-  kettlebell: "Kettlebell",
-  barbell: "Barbell",
-  pull_up_bar: "Pull-up bar",
-  bike: "Stationary bike",
-  treadmill: "Treadmill",
-  rower: "Rowing machine",
-  medicine_ball: "Medicine ball",
-};
