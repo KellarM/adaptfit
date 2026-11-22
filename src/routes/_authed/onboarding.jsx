@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authed/onboarding")({
   component: OnboardingPage,
 });
 
+const DRAFT_KEY = "adaptfit-setup-draft";
+
 // Used until a described condition is read, so the elbow stays protected.
 const DEFAULT_INJURY = {
   name: "Medial epicondylitis",
@@ -37,8 +39,10 @@ function OnboardingPage() {
   const [basics, setBasics] = useState(null);
   const [answers, setAnswers] = useState({});
   const [hydrated, setHydrated] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState("idle");
+  const [saveError, setSaveError] = useState("");
   const profileId = useRef(null);
+  const touched = useRef(false);
   const [form, setForm] = useState({
     basics_text: "",
     kit_text: "",
@@ -55,61 +59,122 @@ function OnboardingPage() {
     equipment: [],
   });
 
+  const latest = useRef(null);
+  latest.current = { form, answers, analysis, basics };
+
   // Pick up whatever was already typed, even if the page was closed halfway.
   useEffect(() => {
     (async () => {
-      const profile = await getProfile();
-      if (profile) {
-        profileId.current = profile.id;
-        const draft = profile.setup_draft;
-        if (draft?.form) {
-          setForm((f) => ({ ...f, ...draft.form }));
-          setAnswers(draft.answers || {});
-          setAnalysis(draft.analysis || null);
-          setBasics(draft.basics || null);
-          setSaved(true);
-        } else {
-          setForm((f) => ({
-            ...f,
-            display_name: profile.display_name || "",
-            age: profile.age ?? "",
-            height_cm: profile.height_cm ?? "",
-            experience: profile.experience || "starting",
-            goals: profile.goals?.length ? profile.goals : f.goals,
-            weekly_target: profile.weekly_target ?? 3,
-            session_minutes: profile.session_minutes ?? 35,
-            conditions_text: profile.conditions_text || "",
-            measurement_unit: profile.measurement_unit || "in",
-          }));
+      let draft = null;
+      try {
+        const profile = await getProfile();
+        if (profile) {
+          profileId.current = profile.id;
+          draft = profile.setup_draft || null;
+          if (!draft?.form) {
+            setForm((f) => ({
+              ...f,
+              display_name: profile.display_name || "",
+              age: profile.age ?? "",
+              height_cm: profile.height_cm ?? "",
+              experience: profile.experience || "starting",
+              goals: profile.goals?.length ? profile.goals : f.goals,
+              weekly_target: profile.weekly_target ?? 3,
+              session_minutes: profile.session_minutes ?? 35,
+              conditions_text: profile.conditions_text || "",
+              measurement_unit: profile.measurement_unit || "in",
+            }));
+          }
         }
+      } catch {
+        draft = null;
+      }
+
+      // The browser copy covers a reload that happened before the save landed.
+      if (!draft?.form) {
+        try {
+          const local = window.localStorage.getItem(DRAFT_KEY);
+          if (local) draft = JSON.parse(local);
+        } catch {
+          draft = null;
+        }
+      }
+
+      if (draft?.form) {
+        setForm((f) => ({ ...f, ...draft.form }));
+        setAnswers(draft.answers || {});
+        setAnalysis(draft.analysis || null);
+        setBasics(draft.basics || null);
+        setSaveState("saved");
       }
       setHydrated(true);
     })();
   }, []);
 
-  // Save everything as it is typed, on the person's own profile record.
-  useEffect(() => {
-    if (!hydrated) return;
-    const timer = setTimeout(async () => {
-      const draft = { form, answers, analysis, basics };
-      try {
-        if (profileId.current) {
-          await base44.entities.HealthProfile.update(profileId.current, { setup_draft: draft });
-        } else {
-          const created = await base44.entities.HealthProfile.create({ setup_draft: draft });
-          profileId.current = created.id;
-        }
-        setSaved(true);
-      } catch {
-        setSaved(false);
+  // Writes everything to the person's profile record, plus a copy in this browser.
+  const persist = useCallback(async () => {
+    if (!touched.current) return;
+    const { form: f, answers: a, analysis: an, basics: b } = latest.current;
+    const draft = { form: f, answers: a, analysis: an, basics: b };
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      /* blocked storage — the profile save below still runs */
+    }
+    setSaveState("saving");
+    setSaveError("");
+    try {
+      const payload = {
+        display_name: f.display_name || "",
+        conditions_text: f.conditions_text || "",
+        setup_draft: draft,
+      };
+      if (profileId.current) {
+        await base44.entities.HealthProfile.update(profileId.current, payload);
+      } else {
+        const created = await base44.entities.HealthProfile.create(payload);
+        profileId.current = created.id;
       }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [hydrated, form, answers, analysis, basics]);
+      setSaveState("saved");
+    } catch (error) {
+      setSaveState("error");
+      setSaveError(error?.message || "unknown error");
+    }
+  }, []);
 
-  const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+  useEffect(() => {
+    if (!hydrated || !touched.current) return;
+    setSaveState("saving");
+    const timer = setTimeout(persist, 600);
+    return () => clearTimeout(timer);
+  }, [hydrated, form, answers, analysis, basics, persist]);
+
+  // Leaving the page mid-typing still saves.
+  useEffect(() => {
+    const flush = () => {
+      if (touched.current) persist();
+    };
+    document.addEventListener("visibilitychange", flush);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      document.removeEventListener("visibilitychange", flush);
+      window.removeEventListener("pagehide", flush);
+    };
+  }, [persist]);
+
+  const set = (patch) => {
+    touched.current = true;
+    setForm((f) => ({ ...f, ...patch }));
+  };
   const setMeasurement = (value) => set({ measurement: value });
-  const setAnswer = (question, value) => setAnswers((a) => ({ ...a, [question]: value }));
+  const setAnswer = (question, value) => {
+    touched.current = true;
+    setAnswers((a) => ({ ...a, [question]: value }));
+  };
+  const setAnalysisSafe = (value) => {
+    touched.current = true;
+    setAnalysis(value);
+  };
 
   const applyBasics = (facts) => {
     setBasics(facts);
@@ -208,6 +273,11 @@ function OnboardingPage() {
       await base44.entities.WorkoutSession.deleteMany({ week_start: mondayOf(), status: "planned" });
       await base44.entities.WorkoutSession.bulkCreate(drafts);
 
+      try {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* nothing to clean up */
+      }
       toast.success("Your first week is ready");
       navigate({ to: "/" });
     } finally {
@@ -276,7 +346,7 @@ function OnboardingPage() {
           text={form.conditions_text}
           onText={(conditions_text) => set({ conditions_text })}
           analysis={analysis}
-          onAnalysis={setAnalysis}
+          onAnalysis={setAnalysisSafe}
           answers={answers}
           onAnswer={setAnswer}
           onClearAnswers={() => setAnswers({})}
@@ -300,11 +370,22 @@ function OnboardingPage() {
         />
       </section>
 
-      <p className="text-center text-[10.5px] leading-relaxed text-muted-foreground">
-        {saved
-          ? "Saved. Close the page whenever — your answers are still here when you come back."
-          : "Saving your answers as you go…"}
-      </p>
+      <div className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          onClick={persist}
+          disabled={saveState === "saving"}
+          className="rounded-full border border-border px-4 py-2 text-[11.5px] text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+        >
+          {saveState === "saving" ? "Saving…" : "Save my setup"}
+        </button>
+        <p className="text-center text-[10.5px] leading-relaxed text-muted-foreground">
+          {saveState === "idle" ? "Everything you enter is saved to your profile as you go." : null}
+          {saveState === "saving" ? "Saving your answers…" : null}
+          {saveState === "saved" ? "Saved to your profile. Close the page whenever." : null}
+          {saveState === "error" ? `Couldn't save: ${saveError}` : null}
+        </p>
+      </div>
 
       <button
         type="button"
