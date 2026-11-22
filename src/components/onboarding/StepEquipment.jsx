@@ -63,10 +63,10 @@ export default function StepEquipment({ equipment, onToggle, onWeight }) {
                       inputMode="decimal"
                       value={picked.weight_value ?? ""}
                       onChange={(e) => onWeight(preset.category, e.target.value)}
-                      placeholder="kg"
+                      placeholder="lb"
                       className="tnum h-9 w-16 rounded-lg border border-input bg-background text-center text-[12px] outline-none focus:border-primary/60"
                     />
-                    <span className="text-[10px] text-muted-foreground">kg</span>
+                    <span className="text-[10px] text-muted-foreground">lb</span>
                   </div>
                 ) : null}
               </div>

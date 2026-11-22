@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getMeasurements, getProfile, getSessions } from "@/lib/api";
 import { addDays, DAY_SHORT, fmtDelta, fmtNum, isoDate, mondayOf, prettyDate } from "@/lib/format";
 import { buildWeek } from "@/lib/plan";
+import { kgToLb } from "@/lib/units";
 import TodayHero from "@/components/today/TodayHero";
 import MetricsStrip from "@/components/today/MetricsStrip";
 import SessionCard from "@/components/today/SessionCard";
@@ -83,7 +84,7 @@ function TodayPage() {
   const baseline = measurements[measurements.length - 1];
   const weightDelta =
     latest?.weight_kg && baseline?.weight_kg
-      ? Number(latest.weight_kg) - Number(baseline.weight_kg)
+      ? Number(kgToLb(latest.weight_kg)) - Number(kgToLb(baseline.weight_kg))
       : null;
 
   const metrics = [
@@ -101,9 +102,9 @@ function TodayPage() {
     },
     {
       label: "Weight",
-      value: latest?.weight_kg ? fmtNum(latest.weight_kg) : "—",
-      unit: latest?.weight_kg ? "kg" : "",
-      note: weightDelta === null ? "no baseline yet" : `${fmtDelta(weightDelta, " kg")} since baseline`,
+      value: latest?.weight_kg ? fmtNum(kgToLb(latest.weight_kg)) : "—",
+      unit: latest?.weight_kg ? "lb" : "",
+      note: weightDelta === null ? "no baseline yet" : `${fmtDelta(weightDelta, " lb")} since baseline`,
     },
   ];
 

@@ -1,10 +1,10 @@
 import { METRICS, metricUnit } from "@/lib/metrics";
-import { cmToUnit } from "@/lib/units";
+import { cmToUnit, kgToLb } from "@/lib/units";
 import { fmtDelta, fmtNum } from "@/lib/format";
 
 export default function MetricTable({ baseline, latest, unit = "cm" }) {
   const rows = METRICS.map((m) => {
-    const toUnit = (value) => (m.length ? cmToUnit(value, unit) : value);
+    const toUnit = (value) => (m.length ? cmToUnit(value, unit) : kgToLb(value));
     const start = toUnit(baseline?.[m.key]);
     const now = toUnit(latest?.[m.key]);
     const hasStart = start !== null && start !== undefined && start !== "";

@@ -5,7 +5,9 @@ import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
 import { isoDate, mondayOf } from "@/lib/format";
 import { METRICS } from "@/lib/metrics";
-import { unitToCm } from "@/lib/units";
+import { lbToKg, unitToCm } from "@/lib/units";
+import { analyzeBasics } from "@/lib/intake-fns";
+import { factsToForm } from "@/lib/basics";
 import { buildWeek } from "@/lib/plan";
 import AboutYou from "@/components/onboarding/AboutYou";
 import BodyMeasurements from "@/components/measurements/BodyMeasurements";
@@ -45,8 +47,10 @@ function OnboardingPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [analysis, setAnalysis] = useState(null);
+  const [basics, setBasics] = useState(null);
   const [answers, setAnswers] = useState({});
   const [form, setForm] = useState({
+    basics_text: "",
     display_name: "",
     age: "",
     height_cm: "",
@@ -83,6 +87,11 @@ function OnboardingPage() {
   const setMeasurement = (value) => set({ measurement: value });
   const setAnswer = (question, value) => setAnswers((a) => ({ ...a, [question]: value }));
 
+  const applyBasics = (facts) => {
+    setBasics(facts);
+    set(factsToForm(facts));
+  };
+
   const toggleEquipment = (preset) => {
     const exists = form.equipment.find((e) => e.category === preset.category);
     set({
@@ -93,7 +102,7 @@ function OnboardingPage() {
             {
               category: preset.category,
               name: EQUIPMENT_NAME[preset.category] || preset.category,
-              weight_unit: "kg",
+              weight_unit: "lb",
               increment: 2.5,
               quantity: preset.category === "dumbbell" ? 2 : 1,
               weight_value: "",
@@ -114,22 +123,33 @@ function OnboardingPage() {
     try {
       const num = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
 
+      // If the notes were typed but never read, read them now so nothing gets lost.
+      let facts = basics;
+      if (!facts && form.basics_text.trim()) {
+        try {
+          facts = await analyzeBasics({ data: { text: form.basics_text.trim() } });
+        } catch {
+          facts = null;
+        }
+      }
+      const applied = { ...form, ...factsToForm(facts) };
+
       const answerLines = Object.entries(answers)
         .filter(([, value]) => value && value.trim())
         .map(([question, value]) => `${question} ${value.trim()}`);
 
       const existing = await getProfile();
       const profilePayload = {
-        display_name: form.display_name,
-        age: num(form.age),
-        height_cm: num(form.height_cm),
-        experience: form.experience,
-        goals: form.goals,
-        weekly_target: num(form.weekly_target) ?? 3,
-        session_minutes: num(form.session_minutes) ?? 35,
+        display_name: applied.display_name,
+        age: num(applied.age),
+        height_cm: num(applied.height_cm),
+        experience: applied.experience,
+        goals: applied.goals,
+        weekly_target: num(applied.weekly_target) ?? 3,
+        session_minutes: num(applied.session_minutes) ?? 35,
         conditions_text: [form.conditions_text.trim(), ...answerLines].filter(Boolean).join("\n"),
         conditions_summary: analysis?.summary || existing?.conditions_summary || "",
-        measurement_unit: form.measurement_unit,
+        measurement_unit: applied.measurement_unit,
         onboarding_complete: true,
       };
       const profile = existing?.id
@@ -158,7 +178,7 @@ function OnboardingPage() {
       METRICS.forEach((m) => {
         const raw = form.measurement[m.key];
         if (raw === "" || raw === undefined || raw === null) return;
-        const value = m.length ? unitToCm(raw, form.measurement_unit) : Number(raw);
+        const value = m.length ? unitToCm(raw, form.measurement_unit) : lbToKg(raw);
         if (value === undefined || Number.isNaN(value)) return;
         measurement[m.key] = value;
         hasMeasure = true;
@@ -212,9 +232,18 @@ function OnboardingPage() {
       <section className="panel px-5 py-5">
         <div className="mb-4 space-y-1">
           <p className="eyebrow">01 · About you</p>
-          <h2 className="font-display text-[1.2rem]">The basics</h2>
+          <h2 className="font-display text-[1.2rem]">Everything about you, in one field</h2>
+          <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+            No boxes to tick. Write whatever comes, and I&rsquo;ll sort it into the fields the
+            programme needs.
+          </p>
         </div>
-        <AboutYou form={form} set={set} />
+        <AboutYou
+          text={form.basics_text}
+          onText={(basics_text) => set({ basics_text })}
+          basics={basics}
+          onBasics={applyBasics}
+        />
       </section>
 
       <section className="panel px-5 py-5">

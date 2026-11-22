@@ -1,89 +1,53 @@
-import { EXPERIENCE, GOALS } from "@/lib/options";
+import { useState } from "react";
+import { analyzeBasics } from "@/lib/intake-fns";
+import BasicsCard from "@/components/onboarding/BasicsCard";
 
-export default function AboutYou({ form, set }) {
-  const toggleGoal = (key) =>
-    set({
-      goals: form.goals.includes(key) ? form.goals.filter((g) => g !== key) : [...form.goals, key],
-    });
+export default function AboutYou({ text, onText, basics, onBasics }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const read = async () => {
+    if (!text.trim()) return;
+    setBusy(true);
+    setError("");
+    try {
+      onBasics(await analyzeBasics({ data: { text: text.trim() } }));
+    } catch {
+      setError("I couldn't read that just now. Try again in a moment.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-2.5">
-        <label className="col-span-2 block">
-          <span className="text-[10.5px] text-muted-foreground">First name</span>
-          <input
-            value={form.display_name}
-            onChange={(e) => set({ display_name: e.target.value })}
-            placeholder="What should the app call you"
-            className="field mt-1"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10.5px] text-muted-foreground">Age</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={form.age}
-            onChange={(e) => set({ age: e.target.value })}
-            className="field tnum mt-1"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10.5px] text-muted-foreground">Experience with weights</span>
-          <select
-            value={form.experience}
-            onChange={(e) => set({ experience: e.target.value })}
-            className="field mt-1"
-          >
-            {EXPERIENCE.map((e) => (
-              <option key={e.key} value={e.key}>
-                {e.label}
-              </option>
-            ))}
-          </select>
-        </label>
+    <div className="space-y-3">
+      <textarea
+        value={text}
+        onChange={(e) => onText(e.target.value)}
+        rows={7}
+        placeholder="Write it however it comes out: your age, what you do all day, how you've trained before, how many days a week you can give this, how long you've got each time, what you want out of it, anything else that matters."
+        className="field h-auto resize-none py-3 leading-relaxed"
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={read}
+          disabled={busy || !text.trim()}
+          className="rounded-full border border-primary/60 bg-primary/15 px-4 py-2.5 text-[12px] text-primary transition hover:bg-primary/25 disabled:opacity-50"
+        >
+          {busy ? "Sorting out your details…" : basics ? "Read it again" : "Read my notes"}
+        </button>
+        <p className="text-[10.5px] leading-relaxed text-muted-foreground">
+          {basics
+            ? "These are the fields I pulled out. Change the text and read it again if I got something wrong."
+            : "I'll fill in what the programme needs: age, experience, goals, days per week, session length."}
+        </p>
       </div>
 
-      <div>
-        <p className="text-[10.5px] text-muted-foreground">What are you working toward</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {GOALS.map((goal) => (
-            <button
-              key={goal.key}
-              type="button"
-              onClick={() => toggleGoal(goal.key)}
-              className={`chip ${form.goals.includes(goal.key) ? "chip-on" : ""}`}
-            >
-              {goal.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <label className="block">
-          <span className="text-[10.5px] text-muted-foreground">Sessions per week</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min="2"
-            max="6"
-            value={form.weekly_target}
-            onChange={(e) => set({ weekly_target: e.target.value })}
-            className="field tnum mt-1"
-          />
-        </label>
-        <label className="block">
-          <span className="text-[10.5px] text-muted-foreground">Minutes each</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={form.session_minutes}
-            onChange={(e) => set({ session_minutes: e.target.value })}
-            className="field tnum mt-1"
-          />
-        </label>
-      </div>
+      {basics ? <BasicsCard basics={basics} /> : null}
     </div>
   );
 }

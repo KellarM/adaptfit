@@ -34,3 +34,20 @@ export function convertEntered(values, metrics, fromUnit, toUnit) {
   });
   return next;
 }
+
+export const KG_PER_LB = 0.4536;
+
+// Body weight is stored in kilograms but always entered and shown in pounds.
+export function kgToLb(kg) {
+  if (isBlank(kg)) return "";
+  const n = Number(kg);
+  if (Number.isNaN(n)) return "";
+  return Math.round((n / KG_PER_LB) * 10) / 10;
+}
+
+export function lbToKg(lb) {
+  if (isBlank(lb)) return undefined;
+  const n = Number(lb);
+  if (Number.isNaN(n)) return undefined;
+  return Math.round(n * KG_PER_LB * 10) / 10;
+}

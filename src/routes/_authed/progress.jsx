@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getMeasurements, getProfile, getSessions } from "@/lib/api";
 import { fmtNum, prettyDate } from "@/lib/format";
-import { cmToUnit } from "@/lib/units";
+import { cmToUnit, kgToLb } from "@/lib/units";
 import MetricTable from "@/components/progress/MetricTable";
 import UnitToggle from "@/components/measurements/UnitToggle";
 import WeightChart from "@/components/progress/WeightChart";
@@ -51,7 +51,7 @@ function ProgressPage() {
     .filter((m) => m.weight_kg)
     .map((m) => ({
       label: prettyDate(m.date, { day: "numeric", month: "short" }),
-      value: Number(m.weight_kg),
+      value: Number(kgToLb(m.weight_kg)),
     }));
 
   const recent = sessions.slice(0, 6);
@@ -95,8 +95,8 @@ function ProgressPage() {
         <div className="panel px-3 py-4 sm:px-4">
           <p className="text-[9px] uppercase tracking-[0.13em] text-muted-foreground">Weight now</p>
           <p className="tnum mt-2.5 font-display text-xl leading-none sm:text-2xl">
-            {latest?.weight_kg ? fmtNum(latest.weight_kg) : "—"}
-            <span className="ml-1 font-body text-[11px] text-muted-foreground">kg</span>
+            {latest?.weight_kg ? fmtNum(kgToLb(latest.weight_kg)) : "—"}
+            <span className="ml-1 font-body text-[11px] text-muted-foreground">lb</span>
           </p>
         </div>
         <div className="panel px-3 py-4 sm:px-4">

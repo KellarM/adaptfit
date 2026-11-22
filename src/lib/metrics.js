@@ -2,7 +2,7 @@ export const METRICS = [
   {
     key: "weight_kg",
     label: "Body weight",
-    unit: "kg",
+    unit: "lb",
     step: "0.1",
     site: "Same scale, same time of day, before you eat.",
   },

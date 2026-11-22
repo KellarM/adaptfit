@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { METRICS } from "@/lib/metrics";
-import { cmToUnit, convertEntered, unitToCm } from "@/lib/units";
+import { cmToUnit, convertEntered, kgToLb, lbToKg, unitToCm } from "@/lib/units";
 import { isoDate } from "@/lib/format";
 import MetricInputs from "@/components/measurements/MetricInputs";
 import UnitToggle from "@/components/measurements/UnitToggle";
@@ -26,7 +26,7 @@ export default function MeasurementDialog({
     const next = {};
     METRICS.forEach((m) => {
       const stored = initial?.[m.key];
-      next[m.key] = m.length ? cmToUnit(stored, unit) : (stored ?? "");
+      next[m.key] = m.length ? cmToUnit(stored, unit) : kgToLb(stored);
     });
     return next;
   });
@@ -46,7 +46,7 @@ export default function MeasurementDialog({
       if (m.length) {
         payload[m.key] = unitToCm(raw, displayUnit);
       } else {
-        payload[m.key] = raw === "" || raw === null || raw === undefined ? undefined : Number(raw);
+        payload[m.key] = lbToKg(raw);
       }
     });
     onSave(payload);

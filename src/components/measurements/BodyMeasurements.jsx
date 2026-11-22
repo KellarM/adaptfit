@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { BODY_SITES, METRICS } from "@/lib/metrics";
-import { cmToUnit, convertEntered, unitToCm } from "@/lib/units";
+import { cmToUnit, convertEntered, kgToLb, lbToKg, unitToCm } from "@/lib/units";
 import BodyDiagram from "@/components/measurements/BodyDiagram";
 import MeasurementRow from "@/components/measurements/MeasurementRow";
 import UnitToggle from "@/components/measurements/UnitToggle";
@@ -87,10 +87,10 @@ export default function BodyMeasurements({
           <MeasurementRow
             key={m.key}
             metric={m}
-            value={value[m.key] ?? ""}
+            value={m.length ? value[m.key] ?? "" : kgToLb(value[m.key])}
             unit={unit}
             highlight={activeKeys.includes(m.key)}
-            onChange={(next) => set({ [m.key]: next })}
+            onChange={(next) => set({ [m.key]: m.length ? next : lbToKg(next) })}
           />
         ))}
       </div>

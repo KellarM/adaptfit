@@ -65,3 +65,52 @@ Return JSON with exactly these fields:
       response_json_schema: RESULT_SCHEMA,
     });
   });
+
+const GOAL_KEYS = ["strength", "muscle", "mobility", "fat_loss", "conditioning", "pain_free"];
+
+const BASICS_SCHEMA = {
+  type: "object",
+  properties: {
+    display_name: { type: "string" },
+    age: { type: "number" },
+    experience: { type: "string", enum: ["starting", "returning", "intermediate"] },
+    goals: { type: "array", items: { type: "string", enum: GOAL_KEYS } },
+    weekly_target: { type: "number" },
+    session_minutes: { type: "number" },
+    summary: { type: "string" },
+  },
+  required: [
+    "display_name",
+    "age",
+    "experience",
+    "goals",
+    "weekly_target",
+    "session_minutes",
+    "summary",
+  ],
+};
+
+export const analyzeBasics = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(z.object({ text: z.string().min(3).max(4000) }))
+  .handler(async ({ data, context }) => {
+    const prompt = `You are a careful strength coach reading the client's own introduction and filling in the fields their programme needs. Never invent a fact the client did not give: when something is missing, use the stated default.
+
+The client wrote:
+"""
+${data.text}
+"""
+
+Return JSON with exactly these fields:
+- display_name: the first name they give. Empty string if they give none.
+- age: their age in whole years as a number. Use 0 if they do not say.
+- experience: "starting" if they are new to strength training or have barely trained, "returning" if they are coming back after a long break or injury, "intermediate" if they are comfortable and consistent with weights.
+- goals: one or more of ${GOAL_KEYS.join(", ")}. strength = get stronger, muscle = build muscle, mobility = move without pain or move better, fat_loss = lose weight, conditioning = more stamina or cardio, pain_free = protect the elbow or another sore joint. Infer from what they say; use ["strength"] if they mention nothing.
+- weekly_target: how many days a week they can realistically train, a whole number from 2 to 6. Use 3 if they do not say.
+- session_minutes: how many minutes they have per session, a whole number from 15 to 90. Use 35 if they do not say.
+- summary: two short sentences in plain everyday language saying what you understood about them. No jargon, no advice, no diagnosis.`;
+    return context.getBase44().asServiceRole.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: BASICS_SCHEMA,
+    });
+  });
