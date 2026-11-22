@@ -2,8 +2,17 @@ import { useState } from "react";
 import { analyzeConditions } from "@/lib/intake-fns";
 import AnalysisCard from "@/components/onboarding/AnalysisCard";
 
-export default function ConditionsSection({ text, onText, analysis, onAnalysis, answers, onAnswer }) {
+export default function ConditionsSection({
+  text,
+  onText,
+  analysis,
+  onAnalysis,
+  answers,
+  onAnswer,
+  onClearAnswers,
+}) {
   const [busy, setBusy] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [error, setError] = useState("");
 
   const analyse = async () => {
@@ -17,6 +26,28 @@ export default function ConditionsSection({ text, onText, analysis, onAnalysis, 
       setError("I couldn't read that just now. Try again in a moment.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Folds the follow-up answers into the description and reads it again, so the
+  // plan is built from the full picture.
+  const applyAnswers = async () => {
+    const lines = Object.entries(answers)
+      .filter(([, value]) => value && value.trim())
+      .map(([question, value]) => `${question} ${value.trim()}`);
+    if (!lines.length) return;
+    const combined = [text.trim(), ...lines].filter(Boolean).join("\n");
+    setApplying(true);
+    setError("");
+    try {
+      const result = await analyzeConditions({ data: { text: combined } });
+      onText(combined);
+      onAnalysis(result);
+      if (onClearAnswers) onClearAnswers();
+    } catch {
+      setError("I couldn't update that just now. Try again in a moment.");
+    } finally {
+      setApplying(false);
     }
   };
 
@@ -49,7 +80,13 @@ export default function ConditionsSection({ text, onText, analysis, onAnalysis, 
       {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
 
       {analysis ? (
-        <AnalysisCard analysis={analysis} answers={answers} onAnswer={onAnswer} />
+        <AnalysisCard
+          analysis={analysis}
+          answers={answers}
+          onAnswer={onAnswer}
+          onApply={applyAnswers}
+          applying={applying}
+        />
       ) : null}
     </div>
   );

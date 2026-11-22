@@ -10,8 +10,9 @@ const TAG_LABELS = {
 
 const SIDE_LABEL = { left: "left side", right: "right side", both: "both sides" };
 
-export default function AnalysisCard({ analysis, answers, onAnswer }) {
+export default function AnalysisCard({ analysis, answers, onAnswer, onApply, applying }) {
   const questions = analysis.follow_up_questions || [];
+  const hasAnswers = Object.values(answers || {}).some((v) => v && v.trim());
 
   return (
     <div className="space-y-3 rounded-2xl border border-primary/30 bg-primary/[0.06] px-4 py-4">
@@ -72,6 +73,16 @@ export default function AnalysisCard({ analysis, answers, onAnswer }) {
               />
             </label>
           ))}
+          {onApply ? (
+            <button
+              type="button"
+              onClick={onApply}
+              disabled={applying || !hasAnswers}
+              className="w-full rounded-full border border-primary/60 bg-primary/15 px-4 py-2.5 text-[12px] text-primary transition hover:bg-primary/25 disabled:opacity-50"
+            >
+              {applying ? "Updating what I understood…" : "Update with my answers"}
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

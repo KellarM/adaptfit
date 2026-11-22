@@ -242,6 +242,7 @@ function OnboardingPage() {
           onAnalysis={setAnalysis}
           answers={answers}
           onAnswer={setAnswer}
+          onClearAnswers={() => setAnswers({})}
         />
       </section>
 
