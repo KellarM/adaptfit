@@ -114,3 +114,83 @@ Return JSON with exactly these fields:
       response_json_schema: BASICS_SCHEMA,
     });
   });
+
+const KIT_CATEGORIES = [
+  "dumbbell",
+  "barbell",
+  "plates",
+  "bench",
+  "band",
+  "kettlebell",
+  "cable",
+  "pull_up_bar",
+  "bike",
+  "rower",
+  "treadmill",
+  "medicine_ball",
+  "other",
+];
+
+const KIT_SCHEMA = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          category: { type: "string", enum: KIT_CATEGORIES },
+          weight_value: { type: "number" },
+          weight_unit: { type: "string", enum: ["lb", "kg"] },
+          increment: { type: "number" },
+          quantity: { type: "number" },
+          notes: { type: "string" },
+        },
+        required: [
+          "name",
+          "category",
+          "weight_value",
+          "weight_unit",
+          "increment",
+          "quantity",
+          "notes",
+        ],
+      },
+    },
+  },
+  required: ["items"],
+};
+
+export const analyzeKit = createServerFn({ method: "POST" })
+  .middleware([requireUser])
+  .validator(
+    z.object({
+      text: z.string().max(2000).optional(),
+      file_uri: z.string().optional(),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const prompt = `You are listing the home gym equipment a client actually owns. You get their own description and sometimes a photo of the equipment.
+
+The client wrote:
+"""
+${data.text?.trim() || "(no description given — use the photo)"}
+"""
+
+Return JSON with exactly one field, items: one entry per distinct piece of equipment they own. Include only what they describe or what is clearly visible in the photo. Never add equipment they did not mention and that is not in the photo.
+
+Each item:
+- name: what it is, in the client's own words plus the size when given (for example "Adjustable dumbbells", "25 lb kettlebell", "Flat bench", "Light resistance band").
+- category: one of ${KIT_CATEGORIES.join(", ")}.
+- weight_value: the heaviest or working weight as a number. Use 0 when the item has no meaningful weight (bench, band, bike, rower, an empty bar).
+- weight_unit: "lb" or "kg", matching what the client used. Use "lb" when they give no unit.
+- increment: the smallest available jump for that item in the same unit (dumbbells 5, barbell and plates 2.5, kettlebell 5, machine 5). Use 2.5 when unsure.
+- quantity: how many they have — 2 for a pair of dumbbells, otherwise 1.
+- notes: one short line with anything that matters, or an empty string.`;
+    return context.getBase44().asServiceRole.integrations.Core.InvokeLLM({
+      prompt,
+      file_urls: data.file_uri ? [data.file_uri] : undefined,
+      response_json_schema: KIT_SCHEMA,
+    });
+  });

@@ -30,19 +30,6 @@ const DEFAULT_INJURY = {
   note: "",
 };
 
-const EQUIPMENT_NAME = {
-  dumbbell: "Dumbbells",
-  band: "Resistance band",
-  bench: "Bench",
-  kettlebell: "Kettlebell",
-  barbell: "Barbell",
-  pull_up_bar: "Pull-up bar",
-  bike: "Stationary bike",
-  treadmill: "Treadmill",
-  rower: "Rowing machine",
-  medicine_ball: "Medicine ball",
-};
-
 function OnboardingPage() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
@@ -51,6 +38,7 @@ function OnboardingPage() {
   const [answers, setAnswers] = useState({});
   const [form, setForm] = useState({
     basics_text: "",
+    kit_text: "",
     display_name: "",
     age: "",
     height_cm: "",
@@ -91,32 +79,6 @@ function OnboardingPage() {
     setBasics(facts);
     set(factsToForm(facts));
   };
-
-  const toggleEquipment = (preset) => {
-    const exists = form.equipment.find((e) => e.category === preset.category);
-    set({
-      equipment: exists
-        ? form.equipment.filter((e) => e.category !== preset.category)
-        : [
-            ...form.equipment,
-            {
-              category: preset.category,
-              name: EQUIPMENT_NAME[preset.category] || preset.category,
-              weight_unit: "lb",
-              increment: 2.5,
-              quantity: preset.category === "dumbbell" ? 2 : 1,
-              weight_value: "",
-            },
-          ],
-    });
-  };
-
-  const setWeight = (category, value) =>
-    set({
-      equipment: form.equipment.map((e) =>
-        e.category === category ? { ...e, weight_value: value } : e
-      ),
-    });
 
   const finish = async () => {
     setSaving(true);
@@ -286,15 +248,17 @@ function OnboardingPage() {
       <section className="panel px-5 py-5">
         <div className="mb-4 space-y-1">
           <p className="eyebrow">04 · Your kit</p>
-          <h2 className="font-display text-[1.2rem]">What you train with</h2>
+          <h2 className="font-display text-[1.2rem]">Show me what you train with</h2>
           <p className="text-[11.5px] leading-relaxed text-muted-foreground">
-            Last piece of data. The routine is built from this and nothing else.
+            Describe it, or send a photo. I&rsquo;ll break it into items — only what you actually
+            own.
           </p>
         </div>
         <StepEquipment
-          equipment={form.equipment}
-          onToggle={toggleEquipment}
-          onWeight={setWeight}
+          text={form.kit_text}
+          onText={(kit_text) => set({ kit_text })}
+          items={form.equipment}
+          onItems={(equipment) => set({ equipment })}
         />
       </section>
 
