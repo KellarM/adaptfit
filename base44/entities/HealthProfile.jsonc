@@ -69,6 +69,10 @@
       "default": "in",
       "description": "Preferred unit for tape measurements"
     },
+    "setup_draft": {
+      "type": "object",
+      "description": "Setup answers saved while onboarding is still in progress, so a refresh loses nothing"
+    },
     "onboarding_complete": {
       "type": "boolean",
       "default": false

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile } from "@/lib/api";
@@ -36,6 +36,9 @@ function OnboardingPage() {
   const [analysis, setAnalysis] = useState(null);
   const [basics, setBasics] = useState(null);
   const [answers, setAnswers] = useState({});
+  const [hydrated, setHydrated] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const profileId = useRef(null);
   const [form, setForm] = useState({
     basics_text: "",
     kit_text: "",
@@ -52,24 +55,57 @@ function OnboardingPage() {
     equipment: [],
   });
 
+  // Pick up whatever was already typed, even if the page was closed halfway.
   useEffect(() => {
     (async () => {
       const profile = await getProfile();
-      if (!profile) return;
-      setForm((f) => ({
-        ...f,
-        display_name: profile.display_name || "",
-        age: profile.age ?? "",
-        height_cm: profile.height_cm ?? "",
-        experience: profile.experience || "starting",
-        goals: profile.goals?.length ? profile.goals : f.goals,
-        weekly_target: profile.weekly_target ?? 3,
-        session_minutes: profile.session_minutes ?? 35,
-        conditions_text: profile.conditions_text || "",
-        measurement_unit: profile.measurement_unit || "in",
-      }));
+      if (profile) {
+        profileId.current = profile.id;
+        const draft = profile.setup_draft;
+        if (draft?.form) {
+          setForm((f) => ({ ...f, ...draft.form }));
+          setAnswers(draft.answers || {});
+          setAnalysis(draft.analysis || null);
+          setBasics(draft.basics || null);
+          setSaved(true);
+        } else {
+          setForm((f) => ({
+            ...f,
+            display_name: profile.display_name || "",
+            age: profile.age ?? "",
+            height_cm: profile.height_cm ?? "",
+            experience: profile.experience || "starting",
+            goals: profile.goals?.length ? profile.goals : f.goals,
+            weekly_target: profile.weekly_target ?? 3,
+            session_minutes: profile.session_minutes ?? 35,
+            conditions_text: profile.conditions_text || "",
+            measurement_unit: profile.measurement_unit || "in",
+          }));
+        }
+      }
+      setHydrated(true);
     })();
   }, []);
+
+  // Save everything as it is typed, on the person's own profile record.
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = setTimeout(async () => {
+      const draft = { form, answers, analysis, basics };
+      try {
+        if (profileId.current) {
+          await base44.entities.HealthProfile.update(profileId.current, { setup_draft: draft });
+        } else {
+          const created = await base44.entities.HealthProfile.create({ setup_draft: draft });
+          profileId.current = created.id;
+        }
+        setSaved(true);
+      } catch {
+        setSaved(false);
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [hydrated, form, answers, analysis, basics]);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
   const setMeasurement = (value) => set({ measurement: value });
@@ -112,6 +148,7 @@ function OnboardingPage() {
         conditions_text: [form.conditions_text.trim(), ...answerLines].filter(Boolean).join("\n"),
         conditions_summary: analysis?.summary || existing?.conditions_summary || "",
         measurement_unit: applied.measurement_unit,
+        setup_draft: null,
         onboarding_complete: true,
       };
       const profile = existing?.id
@@ -262,6 +299,12 @@ function OnboardingPage() {
           onItems={(equipment) => set({ equipment })}
         />
       </section>
+
+      <p className="text-center text-[10.5px] leading-relaxed text-muted-foreground">
+        {saved
+          ? "Saved. Close the page whenever — your answers are still here when you come back."
+          : "Saving your answers as you go…"}
+      </p>
 
       <button
         type="button"
