@@ -6,7 +6,9 @@ import TextToggle from "@/components/onboarding/TextToggle";
 export default function AboutYou({ text, onText, basics, onBasics }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [showText, setShowText] = useState(!basics);
+  // null means "follow the result": closed as soon as there is something read back.
+  const [showText, setShowText] = useState(null);
+  const open = showText === null ? !basics : showText;
 
   const read = async () => {
     if (!text.trim()) return;
@@ -26,7 +28,7 @@ export default function AboutYou({ text, onText, basics, onBasics }) {
     <div className="space-y-3">
       {basics ? <BasicsCard basics={basics} /> : null}
 
-      {showText ? (
+      {open ? (
         <div className="space-y-3">
           <textarea
             value={text}
@@ -57,11 +59,7 @@ export default function AboutYou({ text, onText, basics, onBasics }) {
       {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
 
       {basics ? (
-        <TextToggle
-          open={showText}
-          onToggle={() => setShowText((open) => !open)}
-          label="what I wrote"
-        />
+        <TextToggle open={open} onToggle={() => setShowText(!open)} label="what I wrote" />
       ) : null}
     </div>
   );

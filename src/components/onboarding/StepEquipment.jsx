@@ -11,7 +11,9 @@ export default function StepEquipment({ text, onText, items, onItems }) {
   const [uploading, setUploading] = useState(false);
   const [photo, setPhoto] = useState(null);
   const [error, setError] = useState("");
-  const [showText, setShowText] = useState(!items.length);
+  // null means "follow the result": closed as soon as there is something read back.
+  const [showText, setShowText] = useState(null);
+  const open = showText === null ? !items.length : showText;
   const fileRef = useRef(null);
 
   const attach = async (event) => {
@@ -67,7 +69,7 @@ export default function StepEquipment({ text, onText, items, onItems }) {
         </div>
       ) : null}
 
-      {showText ? (
+      {open ? (
         <div className="space-y-3">
           <textarea
             value={text}
@@ -118,11 +120,7 @@ export default function StepEquipment({ text, onText, items, onItems }) {
       {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
 
       {items.length ? (
-        <TextToggle
-          open={showText}
-          onToggle={() => setShowText((open) => !open)}
-          label="what I wrote"
-        />
+        <TextToggle open={open} onToggle={() => setShowText(!open)} label="what I wrote" />
       ) : null}
     </div>
   );

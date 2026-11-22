@@ -15,7 +15,9 @@ export default function ConditionsSection({
   const [busy, setBusy] = useState(false);
   const [applying, setApplying] = useState(false);
   const [error, setError] = useState("");
-  const [showText, setShowText] = useState(!analysis);
+  // null means "follow the result": closed as soon as there is something read back.
+  const [showText, setShowText] = useState(null);
+  const open = showText === null ? !analysis : showText;
 
   const analyse = async () => {
     if (!text.trim()) return;
@@ -67,7 +69,7 @@ export default function ConditionsSection({
         />
       ) : null}
 
-      {showText ? (
+      {open ? (
         <div className="space-y-3">
           <textarea
             value={text}
@@ -102,11 +104,7 @@ export default function ConditionsSection({
       {error ? <p className="text-[11px] text-destructive">{error}</p> : null}
 
       {analysis ? (
-        <TextToggle
-          open={showText}
-          onToggle={() => setShowText((open) => !open)}
-          label="what I wrote"
-        />
+        <TextToggle open={open} onToggle={() => setShowText(!open)} label="what I wrote" />
       ) : null}
     </div>
   );
