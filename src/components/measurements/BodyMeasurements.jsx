@@ -53,9 +53,10 @@ export default function BodyMeasurements({
   return (
     <div className="grid gap-4 sm:grid-cols-[minmax(0,360px)_minmax(0,1fr)] sm:gap-6">
       <div className="space-y-2">
-        <BodyDiagram active={active} onSelect={select} />
+        <BodyDiagram active={active} onSelect={select} values={value} unit={unit} />
         <p className="text-[10px] leading-relaxed text-muted-foreground">
-          Pick a body part and only its fields open. Tap it again to hide them.
+          Pick a body part and only its fields open. Tap it again to hide them — what you enter
+          shows up on the figure.
         </p>
       </div>
 
