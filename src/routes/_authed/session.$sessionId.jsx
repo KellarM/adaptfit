@@ -147,8 +147,10 @@ function SessionPage() {
       ) : null}
 
       <p className="rounded-2xl bg-secondary px-4 py-3 text-[11.5px] leading-relaxed text-muted-foreground">
-        Work down the list. Tap the tick when a set is done and the rest timer starts itself. The
-        weight shown is only a starting point — adjust it if the last rep felt easy or wobbly.
+        Work down the list. Each movement shows its rest time under the set count — heavier lifts get
+        longer, core and mobility shorter. Tap the tick when a set is done and the timer starts
+        itself. The weight shown is only a starting point — adjust it if the last rep felt easy or
+        wobbly.
       </p>
 
       <div className="space-y-3">

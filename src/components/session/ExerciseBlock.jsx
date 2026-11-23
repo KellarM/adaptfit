@@ -25,6 +25,11 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
                 : `${exercise.sets} × ${timed ? exercise.duration : exercise.reps}`}
             </p>
             <p className="tnum text-[10.5px] text-muted-foreground">{exercise.load}</p>
+            {exercise.rest_seconds > 0 ? (
+              <p className="tnum text-[10px] text-muted-foreground">
+                Rest {exercise.rest_seconds}s
+              </p>
+            ) : null}
           </div>
         </div>
 
