@@ -18,6 +18,14 @@ export const DEMO_CLIPS = {
 // Movements that look nothing like the rest of their pattern get their own clip.
 export const EXERCISE_CLIPS = {
   plank: "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/a16728a92_Plank_demo.mp4",
+  "band-hip-hinge":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/76ca0ee79_Band_hinge_demo.mp4",
+  "face-pull":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/472438e13_Face_pull_demo.mp4",
+  "band-pull-apart":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/100fb22fb_Pull_apart_demo.mp4",
+  "pallof-press":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/123b27779_Pallof_press_demo.mp4",
 };
 
 export function demoFor(exercise) {
