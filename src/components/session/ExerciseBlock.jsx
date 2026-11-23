@@ -20,7 +20,9 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
           </div>
           <div className="shrink-0 text-right">
             <p className="tnum text-[13px]">
-              {exercise.sets} × {timed ? exercise.duration : exercise.reps}
+              {timed && exercise.sets === 1
+                ? exercise.duration
+                : `${exercise.sets} × ${timed ? exercise.duration : exercise.reps}`}
             </p>
             <p className="tnum text-[10.5px] text-muted-foreground">{exercise.load}</p>
           </div>

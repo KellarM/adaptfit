@@ -35,6 +35,9 @@ export const LIBRARY = [
   { id: "band-pull-apart", name: "Band pull-apart", pattern: "push", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Upper back, shoulders", cue: "Arms straight at chest height. Pull the band apart until it touches your chest, squeezing your shoulder blades." },
   { id: "wall-slide", name: "Wall slide", pattern: "push", equipment: ["bodyweight"], tags: [], level: 1, load: "body", muscle: "Shoulders, upper back", cue: "Back against a wall, arms in a goalpost shape. Slide up and down keeping your forearms on the wall." },
 
+  { id: "barbell-bench", name: "Barbell bench press", pattern: "push", equipment: ["barbell", "bench"], tags: [], level: 2, load: "total", muscle: "Chest, shoulders, triceps", cue: "Lie on the bench, hands a little wider than your shoulders. Lower the bar to your chest, then press it up." },
+  { id: "pushup", name: "Push-up on the floor", pattern: "push", equipment: ["bodyweight"], tags: ["wrist"], level: 2, load: "body", muscle: "Chest, shoulders, core", cue: "Hands under your shoulders, body in one line. Lower your chest to a fist off the floor, then press away." },
+
   // ---- pull
   { id: "band-row", name: "Band row, palms facing in", pattern: "pull", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Back, biceps", cue: "Anchor the band at chest height. Pull your elbows back past your ribs with palms facing each other." },
   { id: "chest-supported-row", name: "Chest-supported dumbbell row", pattern: "pull", equipment: ["dumbbell", "bench"], tags: ["grip"], level: 2, load: "per_hand", muscle: "Back, biceps", cue: "Lie chest-down on the bench. Row both dumbbells toward your hips, thumbs pointing forward." },
@@ -52,15 +55,22 @@ export const LIBRARY = [
   { id: "step-up", name: "Step-up", pattern: "squat", equipment: ["bench", "bodyweight"], tags: ["knee"], level: 1, load: "body", muscle: "Legs, hips", cue: "Step onto a low bench, press through the top foot, then lower slowly under control." },
   { id: "wall-sit", name: "Wall sit", pattern: "squat", equipment: ["bodyweight"], tags: [], level: 1, load: "time", muscle: "Legs", cue: "Back flat on the wall, thighs toward level. Breathe steadily and hold." },
 
+  { id: "db-step-up", name: "Dumbbell step-up", pattern: "squat", equipment: ["dumbbell", "bench"], tags: ["knee"], level: 2, load: "per_hand", muscle: "Legs, glutes", cue: "A weight in each hand. Step onto the bench, stand tall on top, then lower slowly." },
+
   // ---- hinge
   { id: "band-hip-hinge", name: "Band hip hinge", pattern: "hinge", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Glutes, hamstrings", cue: "Band under your feet. Push your bottom back with a flat back, then stand up tall." },
   { id: "db-rdl", name: "Dumbbell Romanian deadlift", pattern: "hinge", equipment: ["dumbbell"], tags: ["grip", "lumbar"], level: 2, load: "per_hand", muscle: "Hamstrings, glutes", cue: "Soften the knees, slide the weights down your thighs, stop when you feel a stretch, then stand tall." },
   { id: "glute-bridge", name: "Glute bridge", pattern: "hinge", equipment: ["bodyweight"], tags: [], level: 1, load: "body", muscle: "Glutes, hamstrings", cue: "Heels close to your bottom. Press your hips up until your body is a straight line, then lower slowly." },
   { id: "hip-thrust", name: "Shoulder-elevated hip thrust", pattern: "hinge", equipment: ["bench", "bodyweight"], tags: [], level: 1, load: "body", muscle: "Glutes", cue: "Shoulders on the bench, feet flat. Drive your hips up, squeeze at the top, lower under control." },
 
+  { id: "db-hip-thrust", name: "Dumbbell hip thrust", pattern: "hinge", equipment: ["dumbbell", "bench"], tags: [], level: 2, load: "total", muscle: "Glutes", cue: "Shoulders on the bench, a weight across your hips. Drive up, squeeze hard at the top, lower under control." },
+  { id: "weighted-glute-bridge", name: "Weighted glute bridge", pattern: "hinge", equipment: ["dumbbell"], tags: [], level: 2, load: "total", muscle: "Glutes, hamstrings", cue: "A weight across your hips, heels close. Press up to a straight line and squeeze." },
+
   // ---- lunge
   { id: "reverse-lunge", name: "Reverse lunge", pattern: "lunge", equipment: ["bodyweight", "dumbbell"], tags: ["knee"], level: 1, load: "body", muscle: "Legs, glutes", cue: "Step back, lower the back knee, then push through the front foot to return." },
   { id: "lateral-lunge", name: "Lateral lunge", pattern: "lunge", equipment: ["bodyweight"], tags: ["knee"], level: 2, load: "body", muscle: "Inner thighs, glutes", cue: "Step out to the side, sit into that hip, then push back to standing." },
+
+  { id: "db-reverse-lunge", name: "Dumbbell reverse lunge", pattern: "lunge", equipment: ["dumbbell"], tags: ["knee"], level: 2, load: "per_hand", muscle: "Legs, glutes", cue: "A weight in each hand. Step back, lower the back knee, then push through the front foot to stand." },
 
   // ---- core
   { id: "dead-bug", name: "Dead bug", pattern: "core", equipment: ["bodyweight"], tags: [], level: 1, load: "body", muscle: "Core control", cue: "On your back, arms up, knees over hips. Lower one arm and the opposite leg, then swap slowly." },
@@ -69,14 +79,22 @@ export const LIBRARY = [
   { id: "plank", name: "Plank", pattern: "core", equipment: ["bodyweight"], tags: ["wrist"], level: 1, load: "time", muscle: "Core", cue: "Elbows under shoulders, body in one line. Squeeze your glutes and breathe." },
   { id: "pallof-press", name: "Band Pallof press", pattern: "core", equipment: ["band"], tags: [], level: 1, load: "band", muscle: "Core", cue: "Band anchored to your side. Press both hands straight out from your chest and resist the twist." },
 
+  { id: "side-plank-full", name: "Side plank, legs straight", pattern: "core", equipment: ["bodyweight"], tags: [], level: 2, load: "time", muscle: "Obliques", cue: "Elbow under your shoulder, legs straight, hips lifted. Hold a straight line from head to feet." },
+
   // ---- carry
   { id: "farmer-carry", name: "Farmer carry", pattern: "carry", equipment: ["dumbbell", "kettlebell"], tags: ["grip", "medial_elbow"], level: 2, load: "per_hand", muscle: "Grip, core, posture", cue: "One weight in each hand, walk tall for the set distance without leaning." },
 
   // ---- cardio
-  { id: "brisk-walk", name: "Brisk walk", pattern: "cardio", equipment: ["bodyweight"], tags: [], level: 1, load: "time", muscle: "Heart and lungs", cue: "Pace you could talk in short sentences but not sing." },
-  { id: "stationary-bike", name: "Stationary bike", pattern: "cardio", equipment: ["bike"], tags: [], level: 1, load: "time", muscle: "Heart and lungs", cue: "Easy resistance, steady rhythm, relaxed shoulders." },
-  { id: "rower", name: "Rowing machine", pattern: "cardio", equipment: ["rower"], tags: ["grip"], level: 2, load: "time", muscle: "Heart and lungs, back", cue: "Drive with the legs first, then swing the body back, then pull the handle to your ribs." },
-  { id: "incline-treadmill", name: "Incline walk", pattern: "cardio", equipment: ["treadmill"], tags: [], level: 1, load: "time", muscle: "Heart and lungs", cue: "Gentle incline, upright posture, arms swinging freely." },
+  // `dose` is the whole conditioning block, prescribed and ticked as one piece of work.
+  { id: "bike-intervals", name: "Bike intervals", pattern: "cardio", equipment: ["bike"], tags: [], level: 1, load: "time", muscle: "Heart and lungs, legs", dose: "20 min · 5 × 2 min hard, 2 min easy", cue: "Two minutes at a pace you can only just hold, then two easy minutes. Five rounds, then cool down." },
+  { id: "treadmill-hills", name: "Treadmill hill intervals", pattern: "cardio", equipment: ["treadmill"], tags: [], level: 1, load: "time", muscle: "Heart and lungs, legs", dose: "20 min · 6 × 1 min steep, 2 min flat", cue: "One minute up a steep incline, two minutes flat. Six rounds — the last three should be a fight." },
+  { id: "incline-treadmill", name: "Incline walk", pattern: "cardio", equipment: ["treadmill"], tags: [], level: 1, load: "time", muscle: "Heart and lungs, legs", dose: "20 min · 6–8% incline, brisk", cue: "Incline up until the last few minutes are genuinely hard to talk through." },
+  { id: "bike-steady", name: "Bike steady ride", pattern: "cardio", equipment: ["bike"], tags: [], level: 1, load: "time", muscle: "Heart and lungs, legs", dose: "25 min steady, breathing hard", cue: "Resistance up until you're breathing hard but could still speak a sentence. Hold it the whole block." },
+  { id: "bike-sprints", name: "Bike sprint repeats", pattern: "cardio", equipment: ["bike"], tags: [], level: 2, load: "time", muscle: "Heart and lungs, legs", dose: "18 min · 8 × 30 sec all-out, 90 sec easy", cue: "Thirty seconds as hard as you can turn the pedals, then ninety seconds easy. Eight rounds." },
+  { id: "treadmill-run-walk", name: "Treadmill run-walk intervals", pattern: "cardio", equipment: ["treadmill"], tags: [], level: 2, load: "time", muscle: "Heart and lungs, legs", dose: "24 min · 8 × 1 min run, 1 min walk", cue: "One minute at a run you could not hold for ten, one minute walking. Eight rounds." },
+  { id: "treadmill-tempo", name: "Treadmill tempo block", pattern: "cardio", equipment: ["treadmill"], tags: [], level: 2, load: "time", muscle: "Heart and lungs, legs", dose: "25 min · 15 min hard, even pace", cue: "Five minutes easy, fifteen minutes at a pace that is uncomfortable but repeatable, then easy." },
+  { id: "brisk-walk", name: "Brisk walk", pattern: "cardio", equipment: ["bodyweight"], tags: [], level: 1, load: "time", muscle: "Heart and lungs", dose: "20 min brisk", cue: "Pace you could talk in short sentences but not sing." },
+  { id: "rower", name: "Rowing machine", pattern: "cardio", equipment: ["rower"], tags: ["grip"], level: 2, load: "time", muscle: "Heart and lungs, back", dose: "20 min · 5 × 2 min hard, 1 min easy", cue: "Drive with the legs first, then swing the body back, then pull the handle to your ribs." },
 
   // ---- mobility
   { id: "cat-cow", name: "Cat-cow", pattern: "mobility", equipment: ["bodyweight"], tags: [], level: 1, load: "body", muscle: "Spine", cue: "On all fours, round and arch your spine slowly with your breath." },

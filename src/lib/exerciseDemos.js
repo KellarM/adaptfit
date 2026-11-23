@@ -34,6 +34,20 @@ export const EXERCISE_CLIPS = {
     "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/73f13f28e_Band_row_demo.mp4",
   "bird-dog":
     "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/3c90c9cdd_Bird_dog_demo.mp4",
+  "treadmill-hills":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/19c78901c_Treadmill_demo.mp4",
+  "incline-treadmill":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/19c78901c_Treadmill_demo.mp4",
+  "treadmill-run-walk":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/19c78901c_Treadmill_demo.mp4",
+  "treadmill-tempo":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/19c78901c_Treadmill_demo.mp4",
+  "bike-intervals":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/7889cb3f3_Bike_demo.mp4",
+  "bike-sprints":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/7889cb3f3_Bike_demo.mp4",
+  "bike-steady":
+    "https://media.base44.com/videos/public/6b0353326b6a55d9c1a5fcd0/7889cb3f3_Bike_demo.mp4",
 };
 
 export function demoFor(exercise) {

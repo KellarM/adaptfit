@@ -2,38 +2,45 @@ import { LIBRARY } from "./exerciseLibrary";
 import { addDays, mondayOf, prettyDate, round } from "./format";
 import { KG_PER_LB, weightToLb } from "./units";
 
+// Every training day ends with a real conditioning block — intervals on the bike
+// or treadmill, prescribed by the movement's own dose.
 const SPLITS = {
   2: [
-    { title: "Full body A", focus: "Whole body, gentle start", patterns: ["squat", "push", "pull", "hinge", "core"] },
-    { title: "Full body B", focus: "Whole body, second pass", patterns: ["hinge", "pull", "push", "lunge", "core"] },
+    { title: "Full body A", focus: "Whole body plus intervals", patterns: ["squat", "push", "pull", "hinge", "core", "cardio"] },
+    { title: "Full body B", focus: "Whole body plus intervals", patterns: ["hinge", "pull", "push", "lunge", "core", "cardio"] },
   ],
   3: [
-    { title: "Full body A", focus: "Whole body, gentle start", patterns: ["squat", "push", "pull", "core", "mobility"] },
-    { title: "Full body B", focus: "Hinge, pull and balance", patterns: ["hinge", "pull", "push", "lunge", "core"] },
-    { title: "Full body C", focus: "Steady and controlled", patterns: ["squat", "push", "pull", "hinge", "core"] },
+    { title: "Full body A", focus: "Squat, push, pull plus intervals", patterns: ["squat", "push", "pull", "core", "mobility", "cardio"] },
+    { title: "Full body B", focus: "Hinge, pull and single leg", patterns: ["hinge", "pull", "push", "lunge", "core", "cardio"] },
+    { title: "Full body C", focus: "Whole body, hardest day", patterns: ["squat", "push", "pull", "hinge", "core", "cardio"] },
   ],
   4: [
-    { title: "Upper body", focus: "Push and pull", patterns: ["push", "pull", "push", "pull", "core"] },
-    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core", "mobility"] },
-    { title: "Upper body", focus: "Pull and push", patterns: ["pull", "push", "pull", "push", "core"] },
-    { title: "Legs and easy cardio", focus: "Lower body plus walking", patterns: ["squat", "hinge", "cardio", "core"] },
+    { title: "Upper body", focus: "Push and pull plus intervals", patterns: ["push", "pull", "push", "pull", "core", "cardio"] },
+    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core", "mobility", "cardio"] },
+    { title: "Upper body", focus: "Pull and push plus intervals", patterns: ["pull", "push", "pull", "push", "core", "cardio"] },
+    { title: "Conditioning", focus: "Two cardio blocks and trunk", patterns: ["cardio", "core", "cardio"] },
   ],
   5: [
-    { title: "Upper body", focus: "Push and pull", patterns: ["push", "pull", "push", "pull", "core"] },
-    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core"] },
-    { title: "Upper body", focus: "Pull and push", patterns: ["pull", "push", "pull", "push", "core"] },
-    { title: "Conditioning", focus: "Easy cardio and trunk", patterns: ["cardio", "core", "mobility"] },
-    { title: "Full body", focus: "Whole body", patterns: ["squat", "push", "pull", "hinge", "core"] },
+    { title: "Upper body", focus: "Push and pull plus intervals", patterns: ["push", "pull", "push", "pull", "core", "cardio"] },
+    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core", "cardio"] },
+    { title: "Upper body", focus: "Pull and push plus intervals", patterns: ["pull", "push", "pull", "push", "core", "cardio"] },
+    { title: "Conditioning", focus: "Two cardio blocks and trunk", patterns: ["cardio", "core", "cardio", "mobility"] },
+    { title: "Full body", focus: "Whole body plus intervals", patterns: ["squat", "push", "pull", "hinge", "core", "cardio"] },
   ],
   6: [
-    { title: "Upper body", focus: "Push and pull", patterns: ["push", "pull", "push", "pull", "core"] },
-    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core"] },
-    { title: "Conditioning", focus: "Easy cardio", patterns: ["cardio", "core", "mobility"] },
-    { title: "Upper body", focus: "Pull and push", patterns: ["pull", "push", "pull", "push", "core"] },
-    { title: "Full body", focus: "Whole body", patterns: ["squat", "push", "pull", "hinge", "core"] },
-    { title: "Mobility", focus: "Move and recover", patterns: ["mobility", "core", "cardio"] },
+    { title: "Upper body", focus: "Push and pull plus intervals", patterns: ["push", "pull", "push", "pull", "core", "cardio"] },
+    { title: "Lower body", focus: "Legs and hips", patterns: ["squat", "hinge", "lunge", "core", "cardio"] },
+    { title: "Conditioning", focus: "Two cardio blocks", patterns: ["cardio", "core", "cardio"] },
+    { title: "Upper body", focus: "Pull and push plus intervals", patterns: ["pull", "push", "pull", "push", "core", "cardio"] },
+    { title: "Full body", focus: "Whole body plus intervals", patterns: ["squat", "push", "pull", "hinge", "core", "cardio"] },
+    { title: "Mobility and easy cardio", focus: "Move and recover", patterns: ["mobility", "core", "cardio"] },
   ],
 };
+
+// Strength work should feel like work: the last set of each movement is close to hard.
+const EFFORT_CUE =
+  "Last set close to hard — stop with about two good reps left, and add weight once you clear the top of the rep range.";
+const EFFORT_PATTERNS = new Set(["push", "pull", "squat", "hinge", "lunge", "carry"]);
 
 const DAY_OFFSETS = {
   2: [1, 4],
@@ -91,18 +98,41 @@ function prescription(profile) {
   return { sets, reps, rest };
 }
 
-function loadFor(exercise, equipment, factor) {
+// Heaviest usable weight in the kit for this movement, so the working weight
+// starts from what's actually on the rack rather than the lightest piece.
+function heaviestFor(exercise, equipment) {
+  return equipment
+    .filter((e) => exercise.equipment.includes(e.category) && Number(e.weight_value) > 0)
+    .reduce(
+      (best, item) => {
+        const lb = weightToLb(item.weight_value, item.weight_unit);
+        return lb > best.lb
+          ? { lb, increment: Number(item.increment) || 5 }
+          : best;
+      },
+      { lb: 0, increment: 5 }
+    );
+}
+
+// Share of that heaviest weight to start from, by experience and by whether the
+// weight is held in each hand or loaded as one piece.
+const WORK_SHARE = {
+  per_hand: { starting: 0.4, returning: 0.55, intermediate: 0.7 },
+  total: { starting: 0.5, returning: 0.65, intermediate: 0.8 },
+};
+
+function loadFor(exercise, equipment, factor, experience) {
   if (exercise.load === "body") return { label: "bodyweight", lb: 0, kg: 0 };
   if (exercise.load === "band") return { label: "medium band", lb: 0, kg: 0 };
   if (exercise.load === "time") return { label: "hold", lb: 0, kg: 0 };
 
-  const item = equipment.find(
-    (e) => exercise.equipment.includes(e.category) && Number(e.weight_value) > 0
-  );
-  if (!item) return { label: "light", lb: 0, kg: 0 };
+  const heaviest = heaviestFor(exercise, equipment);
+  if (!heaviest.lb) return { label: "light", lb: 0, kg: 0 };
 
-  const step = Number(item.increment) || 1;
-  const value = Math.max(step, round(weightToLb(item.weight_value, item.weight_unit) * factor, step));
+  const shares = WORK_SHARE[exercise.load] || WORK_SHARE.total;
+  const share = shares[experience] || shares.starting;
+  const step = heaviest.increment;
+  const value = Math.max(step, round(heaviest.lb * share * factor, step));
 
   return {
     label: `${value} lb${exercise.load === "per_hand" ? " each" : ""}`,
@@ -146,6 +176,7 @@ export function buildWeek({
   const offsets = DAY_OFFSETS[target] || DAY_OFFSETS[3];
   const { factor, note } = feedbackAdjustment(sessions);
   const base = prescription(profile);
+  const experience = profile?.experience || "starting";
   const used = new Set();
 
   return split.map((day, dayIdx) => {
@@ -161,18 +192,37 @@ export function buildWeek({
       });
       if (!ex) return;
 
-      const load = loadFor(ex, equipment, factor);
-      const isTimed = ex.load === "time" || pattern === "cardio" || pattern === "mobility";
+      // Conditioning is one continuous block, ticked once when it's done.
+      if (pattern === "cardio") {
+        exercises.push({
+          name: ex.name,
+          pattern,
+          cue: ex.cue,
+          muscle: ex.muscle,
+          sets: 1,
+          reps: null,
+          duration: ex.dose || "20 min steady",
+          rest_seconds: 0,
+          load: "one block",
+          load_lb: 0,
+          load_kg: 0,
+          swapped: false,
+          sets_log: [],
+        });
+        return;
+      }
+
+      const load = loadFor(ex, equipment, factor, experience);
+      const isTimed = ex.load === "time" || pattern === "mobility";
 
       exercises.push({
         name: ex.name,
         pattern,
-        cue: ex.cue,
+        cue: EFFORT_PATTERNS.has(pattern) ? `${ex.cue} ${EFFORT_CUE}` : ex.cue,
         muscle: ex.muscle,
         sets: pattern === "mobility" ? 2 : base.sets,
         reps: isTimed ? null : base.reps,
-        duration:
-          pattern === "cardio" ? "8 min easy" : pattern === "mobility" ? "1 min" : "hold 20–30 sec",
+        duration: pattern === "mobility" ? "1 min" : "hold 20–30 sec",
         rest_seconds: pattern === "core" || pattern === "mobility" ? Math.min(base.rest, 60) : base.rest,
         load: load.label,
         load_lb: load.lb,
@@ -184,7 +234,15 @@ export function buildWeek({
 
     const minutes = Math.max(
       15,
-      Math.round(exercises.reduce((t, e) => t + e.sets * (e.rest_seconds + 40), 0) / 60)
+      Math.round(
+        exercises.reduce((t, e) => {
+          if (e.pattern === "cardio") {
+            const block = Number(String(e.duration).match(/\d+/)?.[0]) || 20;
+            return t + block * 60;
+          }
+          return t + e.sets * (e.rest_seconds + 40);
+        }, 0) / 60
+      )
     );
 
     return {
