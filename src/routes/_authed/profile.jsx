@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LogOut, Plus, Trash2 } from "lucide-react";
+import { Download, LogOut, Plus, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { getInjuries, getProfile } from "@/lib/api";
+import { backupSummary, buildBackup, downloadBackup } from "@/lib/backup";
 import { EXPERIENCE, GOALS, labelOf, SIDES } from "@/lib/options";
 import InjuryDialog from "@/components/profile/InjuryDialog";
 
@@ -21,6 +22,7 @@ function ProfilePage() {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [injuryOpen, setInjuryOpen] = useState(null);
+  const [backingUp, setBackingUp] = useState(false);
 
   const load = async () => {
     const [p, i] = await Promise.all([getProfile(), getInjuries()]);
@@ -282,6 +284,34 @@ function ProfilePage() {
             Nothing flagged. Add anything that needs protecting and it stays out of your plan.
           </p>
         )}
+      </section>
+
+      <section className="panel px-5 py-4">
+        <p className="eyebrow">Your data</p>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Download everything as one file. The sessions cannot be rebuilt from the app if they are
+          lost, so keep a copy somewhere that is not this device.
+        </p>
+        <button
+          type="button"
+          disabled={backingUp}
+          onClick={async () => {
+            setBackingUp(true);
+            try {
+              const data = await buildBackup();
+              downloadBackup(data);
+              toast.success(`Saved ${backupSummary(data)}`);
+            } catch (error) {
+              toast.error("Could not build the backup. Nothing was saved.");
+            } finally {
+              setBackingUp(false);
+            }
+          }}
+          className="mt-3 flex items-center justify-center gap-2 rounded-full border border-border px-5 py-2.5 text-[12.5px] text-muted-foreground transition hover:text-foreground disabled:opacity-60"
+        >
+          <Download className="h-3.5 w-3.5" />
+          {backingUp ? "Gathering…" : "Download backup"}
+        </button>
       </section>
 
       <div className="flex flex-col gap-2 pb-2 sm:flex-row">

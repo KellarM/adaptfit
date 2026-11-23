@@ -39,9 +39,16 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
 
         <ExerciseDemo src={demoFor(exercise)} name={exercise.name} />
 
+        {exercise.last ? (
+          <p className="mt-1.5 text-[10.5px] text-muted-foreground">
+            Last time {exercise.last.weight} lb
+            {exercise.last.reps ? ` × ${exercise.last.reps}` : ""}
+          </p>
+        ) : null}
+
         {exercise.swapped ? (
           <p className="mt-2 text-[10.5px] text-primary">
-            Swapped for a gentler grip while your elbow settles.
+            {exercise.swap_reason || "Swapped for a gentler grip while your elbow settles."}
           </p>
         ) : null}
       </div>

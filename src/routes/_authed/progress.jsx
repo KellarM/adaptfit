@@ -10,6 +10,7 @@ import MetricTable from "@/components/progress/MetricTable";
 import UnitToggle from "@/components/measurements/UnitToggle";
 import WeightChart from "@/components/progress/WeightChart";
 import MeasurementDialog from "@/components/progress/MeasurementDialog";
+import StrengthTrend from "@/components/progress/StrengthTrend";
 
 export const Route = createFileRoute("/_authed/progress")({
   head: () => ({ meta: [{ title: "Progress · Back in Shape" }] }),
@@ -145,6 +146,8 @@ function ProgressPage() {
           <WeightChart points={chartPoints} />
         </div>
       </section>
+
+      <StrengthTrend sessions={sessions} />
 
       <section className="panel px-5 py-4">
         <p className="eyebrow">Recent sessions</p>

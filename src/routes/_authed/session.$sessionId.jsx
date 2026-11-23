@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { sessionVolume } from "@/lib/api";
+import { getSessions, sessionVolume } from "@/lib/api";
 import { prettyDate } from "@/lib/format";
 import { kgToLb } from "@/lib/units";
 import ExerciseBlock from "@/components/session/ExerciseBlock";
@@ -15,16 +15,35 @@ export const Route = createFileRoute("/_authed/session/$sessionId")({
   component: SessionPage,
 });
 
-function withSets(exercise) {
+// The prescription says where to start; last week says where you actually got
+// to. Prefilling from history is the difference between tapping a set done and
+// retyping the same weight every session.
+function withSets(exercise, last) {
   const sets_log =
     exercise.sets_log && exercise.sets_log.length
       ? exercise.sets_log
       : Array.from({ length: exercise.sets || 2 }, () => ({
-          reps: exercise.reps ?? "",
-          weight: exercise.load_lb ?? (exercise.load_kg ? kgToLb(exercise.load_kg) : ""),
+          reps: last?.reps ?? exercise.reps ?? "",
+          weight: last?.weight ?? exercise.load_lb ?? (exercise.load_kg ? kgToLb(exercise.load_kg) : ""),
           done: false,
         }));
-  return { ...exercise, sets_log };
+  return { ...exercise, sets_log, last: last || null };
+}
+
+// Newest first, so the first hit for a movement is the most recent one.
+function lastLogged(sessions = []) {
+  const byName = new Map();
+  [...sessions]
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
+    .forEach((session) => {
+      (session.exercises || []).forEach((exercise) => {
+        if (byName.has(exercise.name)) return;
+        const sets = (exercise.sets_log || []).filter((set) => set.done && Number(set.weight) > 0);
+        const set = sets[sets.length - 1];
+        if (set) byName.set(exercise.name, { weight: set.weight, reps: set.reps });
+      });
+    });
+  return byName;
 }
 
 function SessionPage() {
@@ -43,8 +62,18 @@ function SessionPage() {
     (async () => {
       const record = await base44.entities.WorkoutSession.get(sessionId);
       if (!alive) return;
+
+      // A finished session keeps the numbers it was logged with; only a planned
+      // one is allowed to inherit last week's weights.
+      let history = new Map();
+      if (record.status !== "completed") {
+        const prior = await getSessions({ status: "completed" });
+        history = lastLogged(prior.filter((item) => String(item.date) < String(record.date)));
+      }
+      if (!alive) return;
+
       setSession(record);
-      setExercises((record.exercises || []).map(withSets));
+      setExercises((record.exercises || []).map((ex) => withSets(ex, history.get(ex.name))));
     })();
     return () => {
       alive = false;

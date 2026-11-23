@@ -78,6 +78,24 @@ export function feedbackAdjustment(sessions = []) {
   return { factor: 1, note: "" };
 }
 
+// Pain that keeps coming back is not a bad session, it is a pattern. Three
+// completed sessions in a row at or above the threshold means the movements
+// that load that joint come out of the week rather than being eased again.
+export function painStreak(sessions = [], threshold = 5) {
+  const done = sessions
+    .filter((s) => s.status === "completed")
+    .sort((a, b) =>
+      String(b.completed_at || b.date).localeCompare(String(a.completed_at || a.date))
+    );
+
+  let streak = 0;
+  for (const session of done) {
+    if (Number(session.elbow_pain ?? 0) >= threshold) streak += 1;
+    else break;
+  }
+  return streak;
+}
+
 function prescription(profile) {
   const goals = profile?.goals || [];
   const experience = profile?.experience || "starting";
@@ -168,6 +186,15 @@ export function buildWeek({
   const avoid = new Set(
     injuries.filter((i) => i.status !== "resolved").flatMap((i) => i.avoid_tags || [])
   );
+
+  // A run of painful sessions overrides optimism: gripping and inner-elbow work
+  // stay out until the streak breaks, whatever the injury list says.
+  const streak = painStreak(sessions);
+  const strain = streak >= 3;
+  if (strain) {
+    avoid.add("grip");
+    avoid.add("medial_elbow");
+  }
   const owned = new Set(["bodyweight", ...equipment.map((e) => e.category)]);
   const maxLevel =
     profile?.experience === "intermediate" ? 3 : profile?.experience === "returning" ? 2 : 1;
@@ -228,6 +255,10 @@ export function buildWeek({
         load_lb: load.lb,
         load_kg: load.kg,
         swapped: (pattern === "pull" || pattern === "carry") && avoid.has("grip"),
+        swap_reason:
+          strain && (pattern === "pull" || pattern === "carry")
+            ? `Out this week: your elbow reported pain in ${streak} sessions running.`
+            : null,
         sets_log: [],
       });
     });
@@ -254,7 +285,12 @@ export function buildWeek({
       status: "planned",
       planned_minutes: minutes,
       load_factor: factor,
-      adjustment_note: dayIdx === 0 ? note : "",
+      adjustment_note:
+        dayIdx === 0
+          ? [note, strain ? `Three sessions in a row with elbow pain, so gripping work is out this week.` : ""]
+              .filter(Boolean)
+              .join(" ")
+          : "",
       exercises,
     };
   });
