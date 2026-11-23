@@ -26,7 +26,7 @@ export default function ExerciseDemo({ src, name }) {
             muted
             playsInline
             aria-label={`Demonstration of ${name}`}
-            className="aspect-video w-full object-cover"
+            className="aspect-video w-full bg-black object-contain"
           />
         </div>
       ) : null}

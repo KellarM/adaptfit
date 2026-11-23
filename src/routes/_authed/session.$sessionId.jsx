@@ -9,6 +9,7 @@ import { kgToLb } from "@/lib/units";
 import ExerciseBlock from "@/components/session/ExerciseBlock";
 import RestTimer from "@/components/session/RestTimer";
 import FeedbackDialog from "@/components/session/FeedbackDialog";
+import RepCounter from "@/components/session/RepCounter";
 
 export const Route = createFileRoute("/_authed/session/$sessionId")({
   head: () => ({ meta: [{ title: "Session · Back in Shape" }] }),
@@ -53,6 +54,7 @@ function SessionPage() {
   const [exercises, setExercises] = useState([]);
   const [rest, setRest] = useState(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [counting, setCounting] = useState(null);
   const [saving, setSaving] = useState(false);
   // Typing in a set field shouldn't fire a save per keystroke.
   const saveTimer = useRef(null);
@@ -123,6 +125,36 @@ function SessionPage() {
     }
   };
 
+  // Counting runs off the next set that hasn't been ticked, so the order of the
+  // session decides it rather than the order you tap.
+  const startCount = (exIdx) => {
+    const ex = exercises[exIdx];
+    const setIdx = (ex?.sets_log || []).findIndex((set) => !set.done);
+    if (!ex || setIdx < 0) return;
+    setCounting({ exIdx, setIdx });
+  };
+
+  const finishCount = (reps) => {
+    if (!counting) return;
+    const { exIdx, setIdx } = counting;
+    const ex = exercises[exIdx];
+    const weight = ex.sets_log?.[setIdx]?.weight ?? "";
+    const next = exercises.map((item, i) =>
+      i !== exIdx
+        ? item
+        : {
+            ...item,
+            sets_log: item.sets_log.map((set, si) =>
+              si === setIdx ? { ...set, reps: reps || set.reps, weight, done: true } : set
+            ),
+          }
+    );
+    setCounting(null);
+    persist(next);
+    const seconds = ex.rest_seconds || 60;
+    setRest({ endsAt: Date.now() + seconds * 1000, total: seconds });
+  };
+
   const finish = async (feedback) => {
     setSaving(true);
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -190,6 +222,7 @@ function SessionPage() {
             exercise={exercise}
             onSetChange={(si, patch) => changeSet(i, si, patch)}
             onSetDone={(si) => doneSet(i, si)}
+            onCountSet={startCount}
           />
         ))}
       </div>
@@ -209,6 +242,16 @@ function SessionPage() {
           setRest((r) => (r ? { ...r, endsAt: r.endsAt + s * 1000, total: r.total + s } : r))
         }
       />
+
+      {counting ? (
+        <RepCounter
+          exercise={exercises[counting.exIdx]}
+          setNumber={counting.setIdx + 1}
+          target={Number(exercises[counting.exIdx]?.reps) || 8}
+          onFinish={finishCount}
+          onCancel={() => setCounting(null)}
+        />
+      ) : null}
 
       <FeedbackDialog
         open={feedbackOpen}

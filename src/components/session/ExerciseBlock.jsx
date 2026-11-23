@@ -2,8 +2,10 @@ import { Check } from "lucide-react";
 import { demoFor } from "@/lib/exerciseDemos";
 import ExerciseDemo from "@/components/session/ExerciseDemo";
 
-export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone }) {
+export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone, onCountSet }) {
   const timed = !exercise.reps;
+  const nextSet = (exercise.sets_log || []).findIndex((set) => !set.done);
+  const canCount = !timed && nextSet >= 0;
 
   return (
     <section className="panel overflow-hidden">
@@ -37,7 +39,18 @@ export default function ExerciseBlock({ index, exercise, onSetChange, onSetDone 
           {exercise.cue}
         </p>
 
+        <div className="mt-2 flex flex-wrap items-center gap-2">
         <ExerciseDemo src={demoFor(exercise)} name={exercise.name} />
+        {canCount ? (
+          <button
+            type="button"
+            onClick={() => onCountSet?.(index)}
+            className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[10.5px] text-muted-foreground transition hover:border-primary/50 hover:text-primary"
+          >
+            Count set {nextSet + 1}
+          </button>
+        ) : null}
+      </div>
 
         {exercise.last ? (
           <p className="mt-1.5 text-[10.5px] text-muted-foreground">
