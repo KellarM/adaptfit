@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { base44 } from "@/api/base44Client";
-import { isoDate, prettyDate } from "@/lib/format";
+import { isoDate } from "@/lib/format";
 import { summarise, totals } from "@/lib/training";
 import EntryCard from "@/components/training/EntryCard";
 import QuickAdd from "@/components/training/QuickAdd";
 import TellMe from "@/components/training/TellMe";
+import SavedWorkout from "@/components/training/SavedWorkout";
 
 export const Route = createFileRoute("/_authed/training")({
   head: () => ({ meta: [{ title: "My training · Back in Shape" }] }),
@@ -22,6 +23,23 @@ function TrainingPage() {
   const [entries, setEntries] = useState([]);
   const [saved, setSaved] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+
+  // Writes go out one at a time, and every one reads the draft and the entry
+  // list from these refs, never from a render that may already be stale.
+  const draftRef = useRef(null);
+  const entriesRef = useRef([]);
+  const queue = useRef(Promise.resolve());
+
+  const remember = (record) => {
+    draftRef.current = record;
+    setDraft(record);
+  };
+
+  const applyEntries = (next) => {
+    entriesRef.current = next;
+    setEntries(next);
+  };
 
   useEffect(() => {
     let alive = true;
@@ -31,8 +49,8 @@ function TrainingPage() {
         base44.entities.TrainingLog.filter({ status: "saved" }, { sort: "-date", limit: 60 }),
       ]);
       if (!alive) return;
-      setDraft(drafts[0] || null);
-      setEntries(drafts[0]?.entries || []);
+      remember(drafts[0] || null);
+      applyEntries(drafts[0]?.entries || []);
       setSaved(done);
     })();
     return () => {
@@ -42,51 +60,68 @@ function TrainingPage() {
 
   // Every change is written the moment it happens. A phone that sleeps, a tab
   // that reloads, a workout that takes an hour: the draft is never only in memory.
-  const persist = async (next, extra = {}) => {
-    setEntries(next);
-    if (draft?.id) {
-      await base44.entities.TrainingLog.update(draft.id, { entries: next, ...extra });
-      return draft.id;
-    }
-    const created = await base44.entities.TrainingLog.create({
-      date: isoDate(),
-      status: "draft",
-      entries: next,
-      ...extra,
+  const persist = (next, extra = {}) => {
+    applyEntries(next);
+    const run = queue.current.then(async () => {
+      const payload = { entries: next, ...extra };
+      const record = draftRef.current?.id
+        ? await base44.entities.TrainingLog.update(draftRef.current.id, payload)
+        : await base44.entities.TrainingLog.create({
+            date: isoDate(),
+            status: "draft",
+            ...payload,
+          });
+      remember(record);
+      setSaveError(false);
+      return record;
     });
-    setDraft(created);
-    return created.id;
+    queue.current = run.catch(() => setSaveError(true));
+    return run;
   };
 
   const addEntries = async (rows) => {
-    const next = [...entries, ...rows];
-    await persist(next, { title: draft?.title || "" });
+    const next = [...entriesRef.current, ...rows];
+    await persist(next, { title: draftRef.current?.title || "" });
+    toast.success(
+      `Added ${rows.length === 1 ? "1 entry" : `${rows.length} entries`} to this workout.`
+    );
+    return true;
   };
 
   const removeEntry = async (index) => {
-    const next = entries.filter((_, i) => i !== index);
-    await persist(next);
+    const next = entriesRef.current.filter((_, i) => i !== index);
+    await persist(next).catch(() => {});
+  };
+
+  const retry = async () => {
+    try {
+      await persist(entriesRef.current, { title: draftRef.current?.title || "" });
+      toast.success("Saved.");
+    } catch {
+      toast.error("Still could not save. Your details are safe on this screen.");
+    }
   };
 
   const save = async () => {
-    if (!entries.length) return;
+    const current = entriesRef.current;
+    if (!current.length) return;
     setBusy(true);
     try {
-      const body = {
+      const record = await persist(current, {
         status: "saved",
-        entries,
-        date: draft?.date || isoDate(),
-        title: draft?.title || "",
-        total_minutes: totals(entries).minutes || null,
-        summary: summarise(entries),
+        date: draftRef.current?.date || isoDate(),
+        title: draftRef.current?.title || "",
+        total_minutes: totals(current).minutes || null,
+        summary: summarise(current),
         completed_at: new Date().toISOString(),
-      };
-      const id = await persist(entries, body);
-      const record = { id, ...draft, ...body };
-      setSaved([record, ...saved.filter((s) => s.id !== id)]);
+      });
+      setSaved((rows) => [record, ...rows.filter((row) => row.id !== record.id)]);
+      draftRef.current = null;
       setDraft(null);
-      setEntries([]);
+      applyEntries([]);
       toast.success("Saved. The workout is in your history.");
+    } catch {
+      toast.error("Could not save the workout. Nothing is lost — press save again.");
     } finally {
       setBusy(false);
     }
@@ -131,6 +166,21 @@ function TrainingPage() {
           </p>
         )}
 
+        {saveError ? (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 px-3 py-2">
+            <p className="text-[11.5px] text-foreground">
+              Not saved to the server yet. Your details are still here.
+            </p>
+            <button
+              type="button"
+              onClick={retry}
+              className="shrink-0 rounded-full border border-border px-3 py-1 text-[11px] text-foreground transition hover:border-primary/60 hover:text-primary"
+            >
+              Try again
+            </button>
+          </div>
+        ) : null}
+
         <button
           type="button"
           onClick={save}
@@ -147,15 +197,7 @@ function TrainingPage() {
         {saved.length ? (
           <ul className="mt-2 divide-y divide-border/60">
             {saved.map((row) => (
-              <li key={row.id} className="py-3">
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-[13px] font-medium">{prettyDate(row.date)}</p>
-                  <p className="tnum text-[11.5px] text-muted-foreground">
-                    {row.total_minutes ? `${row.total_minutes} min` : ""}
-                  </p>
-                </div>
-                <p className="mt-0.5 text-[11.5px] text-muted-foreground">{row.summary}</p>
-              </li>
+              <SavedWorkout key={row.id} row={row} />
             ))}
           </ul>
         ) : (

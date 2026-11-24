@@ -22,7 +22,13 @@ export default function TellMe({ onParsed }) {
         toast.error("Nothing I could read as a workout. Try naming what you did and for how long.");
         return;
       }
-      onParsed(entries);
+      // Only clear the words once they are actually stored.
+      try {
+        await onParsed(entries);
+      } catch {
+        toast.error("Read it fine, but it could not be saved. Your words are still here — try again.");
+        return;
+      }
       setText("");
       toast.success(
         `Added ${entries.length} ${entries.length === 1 ? "entry" : "entries"}. Check them below.`

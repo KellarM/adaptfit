@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import { activityEntry, cardioEntry, strengthEntry } from "@/lib/training";
 
 const emptySet = () => ({ reps: "", weight: "" });
@@ -22,6 +22,8 @@ export default function QuickAdd({ onAdd }) {
   const [segments, setSegments] = useState([emptySegment()]);
   const [minutes, setMinutes] = useState("");
   const [metrics, setMetrics] = useState({ distance_km: "", calories: "", avg_speed_kph: "", rounds: "" });
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
   const reset = () => {
     setName("");
@@ -31,14 +33,36 @@ export default function QuickAdd({ onAdd }) {
     setMetrics({ distance_km: "", calories: "", avg_speed_kph: "", rounds: "" });
   };
 
-  const submit = () => {
+  const numeric = (v) => v === "" || Number.isFinite(Number(v));
+  const notNumeric =
+    mode === "strength"
+      ? sets.some((s) => !numeric(s.reps) || !numeric(s.weight))
+      : mode === "cardio"
+        ? segments.some((s) => !numeric(s.minutes) || !numeric(s.speed_kph) || !numeric(s.incline))
+        : !numeric(minutes) || !numeric(metrics.calories) || !numeric(metrics.distance_km);
+
+  // Nothing is cleared until the entry is actually stored, so a failed save
+  // never costs you the numbers you just typed.
+  const submit = async () => {
+    if (notNumeric) {
+      setError("Numbers only in the number fields — no dashes or units.");
+      return;
+    }
     let entry = null;
     if (mode === "strength" && name.trim()) entry = strengthEntry(name, sets);
     if (mode === "cardio" && name.trim()) entry = cardioEntry(name, segments);
     if (mode === "activity" && name.trim()) entry = activityEntry(name, minutes, metrics);
     if (!entry) return;
-    onAdd(entry);
-    reset();
+    setBusy(true);
+    setError("");
+    try {
+      await onAdd(entry);
+      reset();
+    } catch {
+      setError("That did not save. Your numbers are still here — press add again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -202,13 +226,16 @@ export default function QuickAdd({ onAdd }) {
         </div>
       ) : null}
 
+      {error ? <p className="mt-2 text-[11px] text-destructive">{error}</p> : null}
+
       <button
         type="button"
         onClick={submit}
-        disabled={!name.trim()}
-        className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground transition disabled:opacity-40"
+        disabled={!name.trim() || busy}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-[12px] font-medium text-primary-foreground transition disabled:opacity-40"
       >
-        Add to workout
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+        {busy ? "Adding…" : "Add to workout"}
       </button>
     </section>
   );

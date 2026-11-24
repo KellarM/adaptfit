@@ -2,6 +2,14 @@
 // lib/plan.js: nothing here reads the generated plan, and the plan never reads
 // this. Two systems, one direction of travel only when he switches suggestions on.
 
+// A number that is not a number stays empty. NaN in a stored field is what
+// makes a whole record refuse to save, so it never gets that far.
+const toNum = (v) => {
+  if (v === "" || v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
 export function strengthEntry(name, sets = []) {
   return {
     kind: "strength",
@@ -9,8 +17,8 @@ export function strengthEntry(name, sets = []) {
     sets: sets
       .filter((s) => s.reps !== "" || s.weight !== "")
       .map((s) => ({
-        reps: s.reps === "" ? null : Number(s.reps),
-        weight: s.weight === "" ? null : Number(s.weight),
+        reps: toNum(s.reps),
+        weight: toNum(s.weight),
       })),
     segments: [],
     minutes: null,
@@ -27,10 +35,10 @@ export function cardioEntry(name, segments = []) {
     segments: segments
       .filter((s) => s.minutes !== "")
       .map((s) => ({
-        minutes: s.minutes === "" ? null : Number(s.minutes),
+        minutes: toNum(s.minutes),
         mode: s.mode || "other",
-        speed_kph: s.speed_kph === "" || s.speed_kph == null ? null : Number(s.speed_kph),
-        incline: s.incline === "" || s.incline == null ? null : Number(s.incline),
+        speed_kph: toNum(s.speed_kph),
+        incline: toNum(s.incline),
       })),
     minutes: segments.reduce((t, s) => t + (Number(s.minutes) || 0), 0) || null,
     metrics: { distance_km: null, calories: null, avg_speed_kph: null, rounds: null },
@@ -39,7 +47,7 @@ export function cardioEntry(name, segments = []) {
 }
 
 export function activityEntry(name, minutes, metrics = {}) {
-  const clean = (v) => (v === "" || v == null ? null : Number(v));
+  const clean = toNum;
   return {
     kind: "activity",
     name: (name || "").trim(),
