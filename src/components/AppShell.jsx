@@ -1,10 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, ClipboardList, Dumbbell, LayoutDashboard, LineChart, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  Dumbbell,
+  LayoutDashboard,
+  Library as LibraryIcon,
+  LineChart,
+  UserRound,
+} from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Today", icon: LayoutDashboard },
   { to: "/training", label: "Mine", icon: ClipboardList },
   { to: "/plan", label: "Plan", icon: CalendarDays },
+  { to: "/library", label: "Library", icon: LibraryIcon },
   { to: "/progress", label: "Progress", icon: LineChart },
   { to: "/equipment", label: "Kit", icon: Dumbbell },
   { to: "/profile", label: "You", icon: UserRound },
@@ -57,13 +66,13 @@ export default function AppShell({ children }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5">
+        <div className="mx-auto grid max-w-md grid-cols-7">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}
               activeOptions={{ exact: to === "/" }}
-              className="flex flex-col items-center gap-1 py-2.5 text-[9.5px] uppercase tracking-[0.1em] text-muted-foreground transition"
+              className="flex flex-col items-center gap-1 py-2.5 text-[8.5px] uppercase tracking-[0.06em] text-muted-foreground transition"
               activeProps={{ className: "text-primary" }}
             >
               <Icon className="h-[18px] w-[18px]" />
