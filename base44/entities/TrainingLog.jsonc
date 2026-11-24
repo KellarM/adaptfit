@@ -9,8 +9,14 @@
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "saved"],
-      "enumColors": ["amber", "green"],
+      "enum": [
+        "draft",
+        "saved"
+      ],
+      "enumColors": [
+        "yellow",
+        "green"
+      ],
       "description": "draft = still being built, saved = finished and turned into an overview"
     },
     "title": {
@@ -34,28 +40,9 @@
       "format": "date-time"
     }
   },
-  "required": ["status", "entries"],
-  "rls": {
-    "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "create": {
-      "created_by_id": "{{user.id}}"
-    },
-    "update": {
-      "created_by_id": "{{user.id}}"
-    },
-    "delete": {
-      "created_by_id": "{{user.id}}"
-    }
-  }
+  "required": [
+    "status",
+    "entries"
+  ],
+  "rls": {}
 }
