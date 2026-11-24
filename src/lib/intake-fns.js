@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth-middleware";
 
 const AVOID_TAGS = ["grip", "medial_elbow", "wrist", "overhead", "shoulder", "lumbar", "knee"];
 
@@ -44,7 +43,6 @@ const RESULT_SCHEMA = {
 };
 
 export const analyzeConditions = createServerFn({ method: "POST" })
-  .middleware([requireUser])
   .validator(z.object({ text: z.string().min(3).max(4000) }))
   .handler(async ({ data, context }) => {
     const prompt = `You are a careful strength coach reading, in the client's own words, what is going on with their body. You are not a doctor and never diagnose.
@@ -91,7 +89,6 @@ const BASICS_SCHEMA = {
 };
 
 export const analyzeBasics = createServerFn({ method: "POST" })
-  .middleware([requireUser])
   .validator(z.object({ text: z.string().min(3).max(4000) }))
   .handler(async ({ data, context }) => {
     const prompt = `You are a careful strength coach reading the client's own introduction and filling in the fields their programme needs. Never invent a fact the client did not give: when something is missing, use the stated default.
@@ -163,7 +160,6 @@ const KIT_SCHEMA = {
 };
 
 export const analyzeKit = createServerFn({ method: "POST" })
-  .middleware([requireUser])
   .validator(
     z.object({
       text: z.string().max(2000).optional(),

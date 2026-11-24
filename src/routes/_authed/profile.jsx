@@ -1,9 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Download, LogOut, Plus, Trash2 } from "lucide-react";
+import { Download, Plus, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import { getInjuries, getProfile } from "@/lib/api";
 import { backupSummary, buildBackup, downloadBackup } from "@/lib/backup";
 import { EXPERIENCE, GOALS, labelOf, SIDES } from "@/lib/options";
@@ -16,7 +15,6 @@ export const Route = createFileRoute("/_authed/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [injuries, setInjuries] = useState([]);
   const [form, setForm] = useState(null);
@@ -321,14 +319,6 @@ function ProfilePage() {
           className="rounded-full border border-border px-5 py-3 text-[12.5px] text-muted-foreground transition hover:text-foreground"
         >
           Re-run setup
-        </button>
-        <button
-          type="button"
-          onClick={() => logout()}
-          className="flex items-center justify-center gap-2 rounded-full border border-border px-5 py-3 text-[12.5px] text-muted-foreground transition hover:text-foreground"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          Sign out
         </button>
       </div>
 

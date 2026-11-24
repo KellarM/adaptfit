@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireUser } from "@/lib/auth-middleware";
 
 // Turning "20 min bike, 12 km, 340 cal, avg 28 km/h" into numbers the app can
 // add up. The one rule that matters: it records what he said and nothing else.
@@ -62,7 +61,6 @@ const ENTRY_SCHEMA = {
 };
 
 export const parseTrainingEntry = createServerFn({ method: "POST" })
-  .middleware([requireUser])
   .validator(z.object({ text: z.string().min(3).max(2000) }))
   .handler(async ({ data, context }) => {
     const prompt = `You are reading what someone did in a workout, in their own words, and turning it into entries.
