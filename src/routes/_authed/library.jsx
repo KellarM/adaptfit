@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import ClipDialog from "@/components/library/ClipDialog";
 import ExerciseCard from "@/components/library/ExerciseCard";
 import ExerciseDialog from "@/components/library/ExerciseDialog";
 import LibraryFilters, { EMPTY_FILTERS } from "@/components/library/LibraryFilters";
@@ -18,6 +19,7 @@ function LibraryPage() {
   const [loading, setLoading] = useState(true);
   // null = closed, {} = a new movement, a record = editing it.
   const [editing, setEditing] = useState(null);
+  const [watching, setWatching] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -104,6 +106,7 @@ function LibraryPage() {
             <ExerciseCard
               key={exercise.id}
               exercise={exercise}
+              onOpen={setWatching}
               onEdit={setEditing}
               onDelete={remove}
             />
@@ -123,6 +126,12 @@ function LibraryPage() {
           </button>
         </div>
       )}
+
+      <ClipDialog
+        exercise={watching}
+        open={Boolean(watching)}
+        onOpenChange={(next) => !next && setWatching(null)}
+      />
 
       {editing ? (
         <ExerciseDialog
