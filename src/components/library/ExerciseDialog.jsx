@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Loader2, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ClipPicker from "@/components/library/ClipPicker";
-import { DIFFICULTY_OPTIONS, EQUIPMENT_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
+import { EQUIPMENT_OPTIONS } from "@/lib/library";
 import { classifyMovement } from "@/lib/library-fns";
 
 const BLANK = {
@@ -28,20 +27,37 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
   const [form, setForm] = useState(() => ({ ...BLANK, ...(initial || {}) }));
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
-  const [detecting, setDetecting] = useState(false);
+  const [preparing, setPreparing] = useState(false);
+  const [customKit, setCustomKit] = useState("");
 
-  const detect = async () => {
-    setDetecting(true);
+  const addCustomKit = () => {
+    const key = customKit.trim();
+    if (!key) return;
+    if (!(form.equipment || []).includes(key)) set({ equipment: [...(form.equipment || []), key] });
+    setCustomKit("");
+  };
+
+  // Type, difficulty and what it works are read from the name and the kit, so
+  // the person never has to answer them. If that call fails the movement still
+  // saves with whatever it already had.
+  const save = async () => {
+    const name = form.name.trim();
+    setPreparing(true);
+    let payload = { ...form, name };
     try {
-      const result = await classifyMovement({
-        data: { name: form.name.trim(), equipment: form.equipment || [] },
-      });
-      set({ type: result.type, difficulty: result.difficulty, muscle: result.muscle });
+      const result = await classifyMovement({ data: { name, equipment: form.equipment || [] } });
+      payload = {
+        ...payload,
+        type: result.type,
+        difficulty: result.difficulty,
+        muscle: result.muscle,
+      };
     } catch {
-      toast.error("Could not work that one out. Pick them by hand.");
+      // Saved as it stands.
     } finally {
-      setDetecting(false);
+      setPreparing(false);
     }
+    onSave(payload);
   };
 
   const equipment = form.equipment || [];
@@ -61,7 +77,7 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             {initial ? "Edit movement" : "Add a movement"}
           </DialogTitle>
           <DialogDescription className="text-[12px] leading-relaxed">
-            The name is enough to save it. Attach a clip whenever you have one.
+            Type, difficulty and what it works are filled in for you when you save.
           </DialogDescription>
         </DialogHeader>
 
@@ -75,37 +91,6 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
               className="field mt-1"
             />
           </label>
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <label className="block">
-              <span className="text-[10.5px] text-muted-foreground">Type</span>
-              <select
-                value={form.type}
-                onChange={(e) => set({ type: e.target.value })}
-                className="field mt-1 text-[12px]"
-              >
-                {TYPE_OPTIONS.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-[10.5px] text-muted-foreground">Difficulty</span>
-              <select
-                value={form.difficulty}
-                onChange={(e) => set({ difficulty: e.target.value })}
-                className="field mt-1 text-[12px]"
-              >
-                {DIFFICULTY_OPTIONS.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
 
           <div>
             <span className="text-[10.5px] text-muted-foreground">Equipment</span>
@@ -123,22 +108,43 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
                   </button>
                 );
               })}
+              {equipment
+                .filter((key) => !EQUIPMENT_OPTIONS.some((option) => option.key === key))
+                .map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleEquipment(key)}
+                    className="chip chip-on"
+                  >
+                    {key} ×
+                  </button>
+                ))}
+            </div>
+
+            <div className="mt-1.5 flex gap-1.5">
+              <input
+                value={customKit}
+                onChange={(e) => setCustomKit(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addCustomKit();
+                  }
+                }}
+                placeholder="Something else you own"
+                className="field h-9 flex-1 text-[12px]"
+              />
+              <button
+                type="button"
+                onClick={addCustomKit}
+                disabled={!customKit.trim()}
+                className="rounded-xl border border-input px-3.5 text-[12px] text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+              >
+                Add
+              </button>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={detect}
-            disabled={detecting || form.name.trim().length < 2}
-            className="flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-[12px] text-muted-foreground transition hover:border-primary/50 hover:text-primary disabled:opacity-50"
-          >
-            {detecting ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5" />
-            )}
-            {detecting ? "Working it out…" : "Work out type, difficulty and muscles"}
-          </button>
 
           <ClipPicker
             video_source={form.video_source}
@@ -157,23 +163,13 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             />
           </label>
 
-          <label className="block">
-            <span className="text-[10.5px] text-muted-foreground">What it works</span>
-            <input
-              value={form.muscle || ""}
-              onChange={(e) => set({ muscle: e.target.value })}
-              placeholder="Quads, glutes, core"
-              className="field mt-1 text-[12px]"
-            />
-          </label>
-
           <button
             type="button"
-            disabled={saving || !form.name.trim()}
-            onClick={() => onSave({ ...form, name: form.name.trim() })}
+            disabled={saving || preparing || !form.name.trim()}
+            onClick={save}
             className="w-full rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
           >
-            {saving ? "Saving…" : "Save movement"}
+            {preparing || saving ? "Working it out…" : "Save movement"}
           </button>
         </div>
       </DialogContent>
