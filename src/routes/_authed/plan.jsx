@@ -4,8 +4,9 @@ import { toast } from "sonner";
 import { ArrowRight, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { getEquipment, getInjuries, getProfile, getSessions } from "@/lib/api";
-import { addDays, DAY_SHORT, isoDate, mondayOf, prettyDate } from "@/lib/format";
+import { addDays, dateOnly, DAY_SHORT, isoDate, mondayOf, prettyDate } from "@/lib/format";
 import { buildWeek } from "@/lib/plan";
+import LoggedDay from "@/components/plan/LoggedDay";
 
 export const Route = createFileRoute("/_authed/plan")({
   head: () => ({ meta: [{ title: "Weekly plan · Back in Shape" }] }),
@@ -19,13 +20,24 @@ function PlanPage() {
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
-    const [profile, injuries, equipment, sessions] = await Promise.all([
+    const [profile, injuries, equipment, sessions, logs] = await Promise.all([
       getProfile(),
       getInjuries(),
       getEquipment(),
       getSessions({ week_start: weekStart }),
+      // Workouts logged in Mine during this week — they show on the day they happened.
+      base44.entities.TrainingLog.filter(
+        { status: "saved", date: { $gte: weekStart, $lte: addDays(weekStart, 6) } },
+        { sort: "date", limit: 20 }
+      ),
     ]);
-    setData({ profile, injuries, equipment, sessions });
+    setData({
+      profile,
+      injuries,
+      equipment,
+      sessions,
+      logs: logs.items.map((log) => ({ ...log, date: dateOnly(log.date) })),
+    });
   };
 
   useEffect(() => {
@@ -36,7 +48,7 @@ function PlanPage() {
     return <p className="py-24 text-center text-[13px] text-muted-foreground">Loading plan…</p>;
   }
 
-  const { profile, injuries, equipment, sessions } = data;
+  const { profile, injuries, equipment, sessions, logs } = data;
   const today = isoDate();
   const adjustment = sessions.find((s) => s.adjustment_note)?.adjustment_note;
 
@@ -106,6 +118,11 @@ function PlanPage() {
           const date = addDays(weekStart, i);
           const session = sessions.find((s) => s.date === date);
           const isToday = date === today;
+          const logged = logs.find((log) => log.date === date);
+
+          if (!session && logged) {
+            return <LoggedDay key={date} day={DAY_SHORT[i]} log={logged} />;
+          }
 
           if (!session) {
             return (
