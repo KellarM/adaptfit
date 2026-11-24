@@ -1,41 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { isUpload, labelOf, youtubeId, SOURCE_OPTIONS } from "@/lib/library";
-import { warmClip } from "@/lib/clipSource";
-
-const SPEEDS = [1, 1.5, 2];
+import UploadedClipPlayer from "@/components/library/UploadedClipPlayer";
 
 export default function ClipDialog({ exercise, open, onOpenChange }) {
-  const [src, setSrc] = useState(null);
-  const [speed, setSpeed] = useState(1);
-  const [error, setError] = useState("");
-  const videoRef = useRef(null);
-
   const uploaded = isUpload(exercise);
   const youtube = exercise?.video_source === "youtube" ? youtubeId(exercise.video_url) : null;
   const link = exercise?.video_url && !uploaded && !youtube ? exercise.video_url : null;
 
-  useEffect(() => {
-    if (!open || !uploaded) return;
-    let alive = true;
-    setSrc(null);
-    setError("");
-    setSpeed(1);
-    warmClip(exercise.video_url)
-      .then((url) => alive && setSrc(url))
-      .catch(() => alive && setError("That clip could not be loaded."));
-    return () => {
-      alive = false;
-    };
-  }, [open, uploaded, exercise?.video_url]);
-
   if (!exercise) return null;
-
-  const changeSpeed = (rate) => {
-    setSpeed(rate);
-    if (videoRef.current) videoRef.current.playbackRate = rate;
-  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,43 +26,8 @@ export default function ClipDialog({ exercise, open, onOpenChange }) {
         </div>
 
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-black">
-          {uploaded && src ? (
-            <>
-              <video
-                ref={videoRef}
-                src={src}
-                controls
-                autoPlay
-                playsInline
-                onLoadedMetadata={() => {
-                  if (videoRef.current) videoRef.current.playbackRate = speed;
-                }}
-                className="h-full w-full object-contain"
-              />
-              <div className="absolute right-2 top-2 flex gap-1">
-                {SPEEDS.map((rate) => (
-                  <button
-                    key={rate}
-                    type="button"
-                    onClick={() => changeSpeed(rate)}
-                    className={`tnum rounded-full px-2 py-0.5 text-[10px] backdrop-blur transition ${
-                      speed === rate
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background/70 text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {rate}×
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : uploaded && error ? (
-            <p className="grid h-full place-items-center text-[12px] text-destructive">{error}</p>
-          ) : uploaded ? (
-            <p className="flex h-full items-center justify-center gap-2 text-[11.5px] text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading clip…
-            </p>
+          {uploaded ? (
+            <UploadedClipPlayer key={exercise.video_url} fileUri={exercise.video_url} />
           ) : youtube ? (
             <iframe
               src={`https://www.youtube.com/embed/${youtube}?autoplay=1`}

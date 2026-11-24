@@ -1,11 +1,9 @@
 import { Pencil, Play, Trash2, VideoOff } from "lucide-react";
-import { warmClip } from "@/lib/clipSource";
 import {
   DIFFICULTY_OPTIONS,
   EQUIPMENT_OPTIONS,
   SOURCE_OPTIONS,
   TYPE_OPTIONS,
-  isUpload,
   labelOf,
 } from "@/lib/library";
 
@@ -13,18 +11,11 @@ export default function ExerciseCard({ exercise, onOpen, onEdit, onDelete }) {
   const equipment = (exercise.equipment || []).map((key) => labelOf(EQUIPMENT_OPTIONS, key));
   const hasClip = Boolean(exercise.video_url);
 
-  // Hovering pulls the clip in, so opening it plays straight away.
-  const warm = () => {
-    if (isUpload(exercise)) warmClip(exercise.video_url).catch(() => {});
-  };
-
   return (
     <div className="panel p-4">
       <button
         type="button"
         onClick={() => onOpen(exercise)}
-        onPointerEnter={warm}
-        onFocus={warm}
         className="group flex w-full items-start gap-3 text-left"
       >
         <span
