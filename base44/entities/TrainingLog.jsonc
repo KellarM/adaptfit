@@ -1,0 +1,61 @@
+{
+  "name": "TrainingLog",
+  "type": "object",
+  "description": "Michael's own training, logged by hand. Separate from WorkoutSession on purpose: the plan engine must never read this, count it as missed, or adjust loads from it.",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "saved"],
+      "enumColors": ["amber", "green"],
+      "description": "draft = still being built, saved = finished and turned into an overview"
+    },
+    "title": {
+      "type": "string",
+      "description": "What the session was, in his words"
+    },
+    "entries": {
+      "type": "array",
+      "description": "Each item: kind (strength|cardio|activity), name, sets[] (reps, weight, unit), segments[] (minutes, mode, speed_kph, incline), minutes, metrics{} (distance_km, calories, avg_speed_kph, rounds), note, source_text. Only what he actually told the app: unknown values stay null."
+    },
+    "total_minutes": {
+      "type": "number",
+      "description": "Sum of minutes across entries that stated a duration. Not an estimate."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One line generated at save time from the entries themselves"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["status", "entries"],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

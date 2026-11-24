@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, Dumbbell, LayoutDashboard, LineChart, UserRound } from "lucide-react";
+import { CalendarDays, ClipboardList, Dumbbell, LayoutDashboard, LineChart, UserRound } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Today", icon: LayoutDashboard },
+  { to: "/training", label: "Mine", icon: ClipboardList },
   { to: "/plan", label: "Plan", icon: CalendarDays },
   { to: "/progress", label: "Progress", icon: LineChart },
   { to: "/equipment", label: "Kit", icon: Dumbbell },
