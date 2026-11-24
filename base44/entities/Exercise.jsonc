@@ -1,0 +1,112 @@
+{
+  "name": "Exercise",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Movement name, e.g. Goblet squat"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "push",
+        "pull",
+        "squat",
+        "hinge",
+        "lunge",
+        "core",
+        "carry",
+        "mobility",
+        "cardio"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "green",
+        "pink",
+        "gray",
+        "blue",
+        "green",
+        "red"
+      ],
+      "description": "Movement pattern"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "easy",
+        "moderate",
+        "hard"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ]
+    },
+    "equipment": {
+      "type": "array",
+      "description": "Equipment category keys this movement needs, e.g. dumbbell, bench, bodyweight"
+    },
+    "video_source": {
+      "type": "string",
+      "enum": [
+        "upload",
+        "youtube",
+        "instagram",
+        "tiktok",
+        "other"
+      ],
+      "enumColors": [
+        "green",
+        "red",
+        "pink",
+        "gray",
+        "blue"
+      ],
+      "description": "Where the clip comes from"
+    },
+    "video_url": {
+      "type": "string",
+      "description": "Link to the clip, or the private file uri when the clip was uploaded"
+    },
+    "cue": {
+      "type": "string",
+      "description": "One plain-language cue for doing it well"
+    },
+    "muscle": {
+      "type": "string",
+      "description": "What it works"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}
