@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Loader2, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import ClipPicker from "@/components/library/ClipPicker";
 import { DIFFICULTY_OPTIONS, EQUIPMENT_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
+import { classifyMovement } from "@/lib/library-fns";
 
 const BLANK = {
   name: "",
@@ -24,6 +27,22 @@ const BLANK = {
 export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }) {
   const [form, setForm] = useState(() => ({ ...BLANK, ...(initial || {}) }));
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+
+  const [detecting, setDetecting] = useState(false);
+
+  const detect = async () => {
+    setDetecting(true);
+    try {
+      const result = await classifyMovement({
+        data: { name: form.name.trim(), equipment: form.equipment || [] },
+      });
+      set({ type: result.type, difficulty: result.difficulty, muscle: result.muscle });
+    } catch {
+      toast.error("Could not work that one out. Pick them by hand.");
+    } finally {
+      setDetecting(false);
+    }
+  };
 
   const equipment = form.equipment || [];
 
@@ -106,6 +125,20 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
               })}
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={detect}
+            disabled={detecting || form.name.trim().length < 2}
+            className="flex w-full items-center justify-center gap-2 rounded-full border border-border px-4 py-2.5 text-[12px] text-muted-foreground transition hover:border-primary/50 hover:text-primary disabled:opacity-50"
+          >
+            {detecting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5" />
+            )}
+            {detecting ? "Working it out…" : "Work out type, difficulty and muscles"}
+          </button>
 
           <ClipPicker
             video_source={form.video_source}
