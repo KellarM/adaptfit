@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Loader2, Upload } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -7,13 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { base44 } from "@/api/base44Client";
-import {
-  DIFFICULTY_OPTIONS,
-  EQUIPMENT_OPTIONS,
-  SOURCE_OPTIONS,
-  TYPE_OPTIONS,
-} from "@/lib/library";
+import ClipPicker from "@/components/library/ClipPicker";
+import { DIFFICULTY_OPTIONS, EQUIPMENT_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
 
 const BLANK = {
   name: "",
@@ -29,9 +23,6 @@ const BLANK = {
 
 export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }) {
   const [form, setForm] = useState(() => ({ ...BLANK, ...(initial || {}) }));
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
 
   const equipment = form.equipment || [];
@@ -42,21 +33,6 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
         ? equipment.filter((item) => item !== key)
         : [...equipment, key],
     });
-
-  const upload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError("");
-    try {
-      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
-      set({ video_url: file_uri, video_source: "upload" });
-    } catch {
-      setError("That clip could not be uploaded.");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
@@ -131,56 +107,11 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             </div>
           </div>
 
-          <div>
-            <span className="text-[10.5px] text-muted-foreground">Clip</span>
-            <div className="mt-1.5 flex flex-wrap gap-1.5">
-              {SOURCE_OPTIONS.map((option) => (
-                <button
-                  key={option.key}
-                  type="button"
-                  onClick={() => set({ video_source: option.key })}
-                  className={`chip ${form.video_source === option.key ? "chip-on" : ""}`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-
-            {form.video_source === "upload" ? (
-              <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-border px-3 py-3 text-[11.5px] text-muted-foreground transition hover:border-primary/60 hover:text-primary">
-                {uploading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Upload className="h-3.5 w-3.5" />
-                )}
-                {form.video_url
-                  ? "Replace the clip"
-                  : uploading
-                    ? "Uploading…"
-                    : "Choose a video file"}
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={upload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </label>
-            ) : (
-              <input
-                value={form.video_url}
-                onChange={(e) => set({ video_url: e.target.value })}
-                placeholder="Paste the link to the clip"
-                className="field mt-2 text-[12px]"
-              />
-            )}
-
-            <p className="mt-1.5 text-[10.5px] text-muted-foreground">
-              {form.video_source === "upload"
-                ? "Uploaded clips are stored privately and play inside the app."
-                : "YouTube links play in the app. Other links open in a new tab."}
-            </p>
-          </div>
+          <ClipPicker
+            video_source={form.video_source}
+            video_url={form.video_url}
+            onChange={set}
+          />
 
           <label className="block">
             <span className="text-[10.5px] text-muted-foreground">Cue</span>
@@ -203,11 +134,9 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             />
           </label>
 
-          {error ? <p className="text-[11.5px] text-destructive">{error}</p> : null}
-
           <button
             type="button"
-            disabled={saving || uploading || !form.name.trim()}
+            disabled={saving || !form.name.trim()}
             onClick={() => onSave({ ...form, name: form.name.trim() })}
             className="w-full rounded-full bg-primary px-5 py-3.5 text-[13.5px] font-medium text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
           >

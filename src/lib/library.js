@@ -30,5 +30,14 @@ export function youtubeId(url = "") {
   return match ? match[1] : null;
 }
 
+// Which source a pasted link belongs to, so the right tab lights up.
+export function sourceForUrl(url = "") {
+  const value = String(url);
+  if (/youtu\.?be/.test(value)) return "youtube";
+  if (/instagram\.com/.test(value)) return "instagram";
+  if (/tiktok\.com/.test(value)) return "tiktok";
+  return "other";
+}
+
 export const isUpload = (exercise) =>
   exercise?.video_source === "upload" && Boolean(exercise?.video_url);
