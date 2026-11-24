@@ -41,3 +41,18 @@ export function sourceForUrl(url = "") {
 
 export const isUpload = (exercise) =>
   exercise?.video_source === "upload" && Boolean(exercise?.video_url);
+
+// Everyday words people use for a muscle, so "abs" also finds the movements
+// labelled "abdominals". Everything else is matched as typed.
+const MUSCLE_ALIASES = {
+  ab: ["abs", "abdomin"],
+  abs: ["abs", "abdomin"],
+  abdominal: ["abs", "abdomin"],
+  abdominals: ["abs", "abdomin"],
+};
+
+export function muscleSearchTerms(query = "") {
+  const needle = String(query).trim().toLowerCase();
+  if (!needle) return [];
+  return MUSCLE_ALIASES[needle] || [needle];
+}

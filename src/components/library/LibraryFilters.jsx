@@ -5,7 +5,14 @@ import {
   TYPE_OPTIONS,
 } from "@/lib/library";
 
-export const EMPTY_FILTERS = { q: "", type: "", difficulty: "", equipment: "", source: "" };
+export const EMPTY_FILTERS = {
+  muscle: "",
+  q: "",
+  type: "",
+  difficulty: "",
+  equipment: "",
+  source: "",
+};
 
 const SELECTS = [
   { key: "type", all: "All types", options: TYPE_OPTIONS },
@@ -20,6 +27,16 @@ export default function LibraryFilters({ filters, onChange, count }) {
 
   return (
     <div className="space-y-2.5">
+      <label className="block">
+        <span className="text-[10.5px] text-muted-foreground">Focus on a muscle</span>
+        <input
+          value={filters.muscle}
+          onChange={(e) => set({ muscle: e.target.value })}
+          placeholder="Type a muscle, e.g. Abs"
+          className="field mt-1"
+        />
+      </label>
+
       <input
         value={filters.q}
         onChange={(e) => set({ q: e.target.value })}

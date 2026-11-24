@@ -7,6 +7,7 @@ import ClipDialog from "@/components/library/ClipDialog";
 import ExerciseCard from "@/components/library/ExerciseCard";
 import ExerciseDialog from "@/components/library/ExerciseDialog";
 import LibraryFilters, { EMPTY_FILTERS } from "@/components/library/LibraryFilters";
+import { muscleSearchTerms } from "@/lib/library";
 
 export const Route = createFileRoute("/_authed/library")({
   head: () => ({ meta: [{ title: "Library · Back in Shape" }] }),
@@ -30,6 +31,12 @@ function LibraryPage() {
     if (filters.source) query.video_source = filters.source;
     const search = filters.q.trim();
     if (search) query.name = { $regex: search, $options: "i" };
+    const muscleTerms = muscleSearchTerms(filters.muscle);
+    if (muscleTerms.length) {
+      query.$or = muscleTerms.map((term) => ({
+        muscle: { $regex: term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" },
+      }));
+    }
 
     const { items } = await base44.entities.Exercise.filter(query, {
       sort: "name",
