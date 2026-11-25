@@ -14,10 +14,22 @@ export const Route = createFileRoute("/_authed/library")({
   component: LibraryPage,
 });
 
+// A page that is opened cold can ask before the session is ready; one quiet retry
+// turns that hiccup into a normal load instead of an empty page.
+async function fetchExercises(query) {
+  try {
+    return await base44.entities.Exercise.filter(query, { sort: "name", limit: 200 });
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 700));
+    return base44.entities.Exercise.filter(query, { sort: "name", limit: 200 });
+  }
+}
+
 function LibraryPage() {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   // null = closed, {} = a new movement, a record = editing it.
   const [editing, setEditing] = useState(null);
   const [watching, setWatching] = useState(null);
@@ -25,6 +37,7 @@ function LibraryPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError("");
     const query = {};
     if (filters.type) query.type = filters.type;
     if (filters.difficulty) query.difficulty = filters.difficulty;
@@ -38,16 +51,19 @@ function LibraryPage() {
       }));
     }
 
-    const { items } = await base44.entities.Exercise.filter(query, {
-      sort: "name",
-      limit: 200,
-    });
-    setRows(
-      filters.equipment
-        ? items.filter((exercise) => (exercise.equipment || []).includes(filters.equipment))
-        : items
-    );
-    setLoading(false);
+    try {
+      const { items } = await fetchExercises(query);
+      setRows(
+        filters.equipment
+          ? items.filter((exercise) => (exercise.equipment || []).includes(filters.equipment))
+          : items
+      );
+    } catch {
+      setRows([]);
+      setLoadError("Your library could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   }, [filters]);
 
   useEffect(() => {
@@ -105,7 +121,18 @@ function LibraryPage() {
 
       <LibraryFilters filters={filters} onChange={setFilters} count={rows.length} />
 
-      {loading ? (
+      {loadError ? (
+        <div className="rounded-2xl border border-dashed border-border px-5 py-14 text-center">
+          <p className="text-[13px] text-muted-foreground">{loadError}</p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-4 rounded-full border border-border px-4 py-2 text-[11.5px] text-muted-foreground transition hover:border-primary/60 hover:text-primary"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
         <p className="py-16 text-center text-[13px] text-muted-foreground">Loading library…</p>
       ) : rows.length ? (
         <div className="grid gap-3 sm:grid-cols-2">
