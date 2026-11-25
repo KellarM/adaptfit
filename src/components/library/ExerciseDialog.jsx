@@ -8,12 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ClipPicker from "@/components/library/ClipPicker";
-import { EQUIPMENT_OPTIONS } from "@/lib/library";
+import { EQUIPMENT_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
 import { classifyMovement } from "@/lib/library-fns";
 
 const BLANK = {
   name: "",
-  type: "push",
+  type: "",
   difficulty: "easy",
   equipment: [],
   video_source: "upload",
@@ -29,6 +29,14 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
 
   const [preparing, setPreparing] = useState(false);
   const [customKit, setCustomKit] = useState("");
+  // A type the person chose is theirs to keep; one they never touched is the app's.
+  const [typePicked, setTypePicked] = useState(Boolean(initial?.type));
+
+  const pickType = (key) => {
+    const same = form.type === key;
+    set({ type: same ? "" : key });
+    setTypePicked(!same);
+  };
 
   const addCustomKit = () => {
     const key = customKit.trim();
@@ -48,7 +56,7 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
       const result = await classifyMovement({ data: { name, equipment: form.equipment || [] } });
       payload = {
         ...payload,
-        type: result.type,
+        type: typePicked && form.type ? form.type : result.type,
         difficulty: result.difficulty,
         muscle: result.muscle,
       };
@@ -77,7 +85,8 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             {initial ? "Edit movement" : "Add a movement"}
           </DialogTitle>
           <DialogDescription className="text-[12px] leading-relaxed">
-            Type, difficulty and what it works are filled in for you when you save.
+            Type, difficulty and what it works are filled in for you when you save. Pick a type
+            yourself if it got one wrong.
           </DialogDescription>
         </DialogHeader>
 
@@ -91,6 +100,25 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
               className="field mt-1"
             />
           </label>
+
+          <div>
+            <span className="text-[10.5px] text-muted-foreground">Type</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => pickType(option.key)}
+                  className={`chip ${form.type === option.key ? "chip-on" : ""}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1.5 text-[10.5px] text-muted-foreground">
+              {form.type ? "Tap it again to let the app decide." : "Leave it empty and the app works it out."}
+            </p>
+          </div>
 
           <div>
             <span className="text-[10.5px] text-muted-foreground">Equipment</span>
