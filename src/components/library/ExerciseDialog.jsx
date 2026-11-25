@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ClipPicker from "@/components/library/ClipPicker";
-import { EQUIPMENT_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
+import { EQUIPMENT_OPTIONS, MUSCLE_OPTIONS, TYPE_OPTIONS } from "@/lib/library";
 import { classifyMovement } from "@/lib/library-fns";
 
 const BLANK = {
@@ -38,6 +38,16 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
     setTypePicked(!same);
   };
 
+  const [musclePicked, setMusclePicked] = useState(Boolean(initial?.muscle?.trim()));
+
+  const setMuscle = (value) => {
+    set({ muscle: value });
+    setMusclePicked(Boolean(value.trim()));
+  };
+
+  const pickMuscle = (label) =>
+    setMuscle((form.muscle || "").trim().toLowerCase() === label.toLowerCase() ? "" : label);
+
   const addCustomKit = () => {
     const key = customKit.trim();
     if (!key) return;
@@ -58,7 +68,7 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
         ...payload,
         type: typePicked && form.type ? form.type : result.type,
         difficulty: result.difficulty,
-        muscle: result.muscle,
+        muscle: musclePicked && (form.muscle || "").trim() ? form.muscle.trim() : result.muscle,
       };
     } catch {
       // Saved as it stands.
@@ -85,8 +95,8 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             {initial ? "Edit movement" : "Add a movement"}
           </DialogTitle>
           <DialogDescription className="text-[12px] leading-relaxed">
-            Type, difficulty and what it works are filled in for you when you save. Pick a type
-            yourself if it got one wrong.
+            Type, difficulty and what it works are filled in for you when you save. Pick them
+            yourself if it got something wrong.
           </DialogDescription>
         </DialogHeader>
 
@@ -118,6 +128,30 @@ export default function ExerciseDialog({ initial, onOpenChange, onSave, saving }
             <p className="mt-1.5 text-[10.5px] text-muted-foreground">
               {form.type ? "Tap it again to let the app decide." : "Leave it empty and the app works it out."}
             </p>
+          </div>
+
+          <div>
+            <span className="text-[10.5px] text-muted-foreground">What it works</span>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {MUSCLE_OPTIONS.map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => pickMuscle(label)}
+                  className={`chip ${
+                    (form.muscle || "").trim().toLowerCase() === label.toLowerCase() ? "chip-on" : ""
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input
+              value={form.muscle || ""}
+              onChange={(e) => setMuscle(e.target.value)}
+              placeholder="Or type it, e.g. chest, shoulders, triceps"
+              className="field mt-1.5 h-9 text-[12px]"
+            />
           </div>
 
           <div>

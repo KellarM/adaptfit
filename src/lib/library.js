@@ -22,6 +22,22 @@ export const EQUIPMENT_OPTIONS = [
   ...EQUIPMENT_CATEGORIES,
 ];
 
+// The usual answers for "what it works". Anything else can be typed in.
+export const MUSCLE_OPTIONS = [
+  "Chest",
+  "Back",
+  "Shoulders",
+  "Biceps",
+  "Triceps",
+  "Forearms",
+  "Abs",
+  "Glutes",
+  "Quads",
+  "Hamstrings",
+  "Calves",
+  "Full body",
+];
+
 export const labelOf = (list, key) => list.find((item) => item.key === key)?.label || key || "—";
 
 // Any of the usual YouTube link shapes, so a pasted share link still plays inline.
