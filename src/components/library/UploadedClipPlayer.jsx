@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Repeat } from "lucide-react";
 import { getClipSource } from "@/lib/clipSource";
 
 export default function UploadedClipPlayer({ fileUri }) {
@@ -7,6 +7,7 @@ export default function UploadedClipPlayer({ fileUri }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [speed, setSpeed] = useState(1);
+  const [loop, setLoop] = useState(false);
   const videoRef = useRef(null);
   useEffect(() => {
     let active = true;
@@ -19,7 +20,7 @@ export default function UploadedClipPlayer({ fileUri }) {
   return (
     <>
       {src && !error ? <video
-        ref={videoRef} src={src} controls autoPlay playsInline preload="auto"
+        ref={videoRef} src={src} controls autoPlay playsInline preload="auto" loop={loop}
         onWaiting={() => setLoading(true)}
         onCanPlay={() => setLoading(false)}
         onPlaying={() => setLoading(false)}
@@ -32,6 +33,13 @@ export default function UploadedClipPlayer({ fileUri }) {
       </div> : null}
       {error ? <p role="alert" className="absolute inset-0 grid place-items-center text-[12px] text-destructive">{error}</p> : null}
       {src && !error ? <div className="absolute right-2 top-2 flex gap-1">
+        <button
+          type="button" aria-pressed={loop} aria-label="Repeat this clip"
+          onClick={() => setLoop((on) => !on)}
+          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] backdrop-blur transition ${loop ? "bg-primary text-primary-foreground" : "bg-background/70 text-muted-foreground hover:text-foreground"}`}
+        >
+          <Repeat className="h-2.5 w-2.5" />Repeat
+        </button>
         {[1, 1.5, 2].map((rate) => <button
           key={rate} type="button" aria-pressed={speed === rate}
           onClick={() => { setSpeed(rate); if (videoRef.current) videoRef.current.playbackRate = rate; }}

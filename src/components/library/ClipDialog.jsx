@@ -1,9 +1,11 @@
-import { ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { ExternalLink, Repeat } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { isUpload, labelOf, youtubeId, SOURCE_OPTIONS } from "@/lib/library";
 import UploadedClipPlayer from "@/components/library/UploadedClipPlayer";
 
 export default function ClipDialog({ exercise, open, onOpenChange }) {
+  const [loop, setLoop] = useState(false);
   const uploaded = isUpload(exercise);
   const youtube = exercise?.video_source === "youtube" ? youtubeId(exercise.video_url) : null;
   const link = exercise?.video_url && !uploaded && !youtube ? exercise.video_url : null;
@@ -29,13 +31,31 @@ export default function ClipDialog({ exercise, open, onOpenChange }) {
           {uploaded ? (
             <UploadedClipPlayer key={exercise.video_url} fileUri={exercise.video_url} />
           ) : youtube ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${youtube}?autoplay=1`}
-              title={exercise.name}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="h-full w-full"
-            />
+            <>
+              <iframe
+                key={loop ? "looped" : "once"}
+                src={`https://www.youtube.com/embed/${youtube}?autoplay=1${
+                  loop ? `&loop=1&playlist=${youtube}` : ""
+                }`}
+                title={exercise.name}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+              <button
+                type="button"
+                aria-pressed={loop}
+                onClick={() => setLoop((on) => !on)}
+                className={`absolute right-2 top-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] backdrop-blur transition ${
+                  loop
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background/70 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Repeat className="h-2.5 w-2.5" />
+                Repeat
+              </button>
+            </>
           ) : link ? (
             <div className="grid h-full place-items-center">
               <a
